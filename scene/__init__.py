@@ -4,6 +4,7 @@ import json
 from utils.system_utils import searchForMaxIteration
 from scene.dataset_readers import sceneLoadTypeCallbacks
 from scene.gaussian_model import GaussianModel
+from scene.obj_model import ObjModel
 from scene.cameras import cameraList_from_camInfos
 import torch
 import open3d as o3d
@@ -29,7 +30,7 @@ def load_cameras(args, data_type, ignore_dynamic=False):
 class Scene:
 
     def __init__(self, args, gaussians:GaussianModel, load_iteration=None, shuffle=True, 
-                 unicycle=False, uc_fit_iter=0, data_type='kitti360', ignore_dynamic=False, planning=None):
+                 data_type='kitti360', ignore_dynamic=False, planning=None):
         """b
         :param path: Path to colmap scene main folder.
         """
@@ -50,12 +51,10 @@ class Scene:
         self.dynamic_verts = scene_info.verts
         self.dynamic_gaussians = {}
         for track_id in scene_info.verts:
-            self.dynamic_gaussians[track_id] = GaussianModel(args.model.sh_degree, feat_mutable=False)
+            self.dynamic_gaussians[track_id] = ObjModel(args.model.sh_degree, feat_mutable=False)
         if planning is not None:
             for plan_id in planning.keys():
-                self.dynamic_gaussians[plan_id] = GaussianModel(args.model.sh_degree, feat_mutable=False)
-        
-        self.unicycles = {}
+                self.dynamic_gaussians[plan_id] = ObjModel(args.model.sh_degree, feat_mutable=False)
 
         if not self.loaded_iter:
             shutil.copyfile(scene_info.ply_path, os.path.join(self.model_path, "input.ply"))
@@ -80,9 +79,9 @@ class Scene:
                     model_params = list(model_params)
                     model_params.append(None)
                     dynamic_gaussian.restore(model_params, None)
-            for iid, unicycle_pkg in self.unicycles.items():
-                model_params = torch.load(os.path.join(self.model_path, "ckpts", f"unicycle_{iid}_chkpnt{self.loaded_iter}.pth"))
-                unicycle_pkg['model'].restore(model_params)
+            # for iid, unicycle_pkg in self.unicycles.items():
+            #     model_params = torch.load(os.path.join(self.model_path, "ckpts", f"unicycle_{iid}_chkpnt{self.loaded_iter}.pth"))
+            #     unicycle_pkg['model'].restore(model_params)
 
         else:
             self.gaussians.create_from_pcd(scene_info.point_cloud, self.cameras_extent)

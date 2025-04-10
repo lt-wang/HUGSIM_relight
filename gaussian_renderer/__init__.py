@@ -57,13 +57,13 @@ def proj_uv(xyz, cam):
     return uv
 
 
-def unicycle_b2w(timestamp, model, track_id=None):
+def unicycle_b2w(timestamp, model):
     pred = model(timestamp)
     if pred is None:
         return None
     pred_a, pred_b, pred_v, pitchroll, pred_yaw, pred_h = pred
     rt = torch.eye(4).float().cuda()
-    rt[:3,:3] = roma.euler_to_rotmat('xzy', [pitchroll[0], pitchroll[1], pred_yaw])
+    rt[:3,:3] = roma.euler_to_rotmat('xzy', [-pitchroll[0]+torch.pi/2, -pitchroll[1]+torch.pi/2, -pred_yaw+torch.pi/2])
     rt[1, 3], rt[0, 3], rt[2, 3] = pred_h, pred_a, pred_b
     return rt
 

@@ -2,7 +2,7 @@ import os
 import torch
 from utils.loss_utils import l1_loss, ssim, ssim_loss
 from gaussian_renderer import render
-from scene import Scene, GaussianModel  
+from scene import Scene, GaussianModel
 import uuid
 from torchmetrics.image import PeakSignalNoiseRatio
 from torchmetrics.image import StructuralSimilarityIndexMeasure
@@ -17,6 +17,7 @@ from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
 from functools import partial
 from tqdm import tqdm as std_tqdm
+from utils.dynamic_utils import create_unicycle_model
 tqdm = partial(std_tqdm, dynamic_ncols=True)
 
 results = {'train': {}, 'test': {}}
@@ -39,13 +40,16 @@ def training(cfg):
     prepare_output(cfg)
     (ground_model_params, _) = torch.load(os.path.join(cfg.model_path, "ckpts", f"ground_chkpnt30000.pth"))
     gaussians = GaussianModel(cfg.model.sh_degree, feat_mutable=True, affine=cfg.affine, ground_args=ground_model_params)
-    scene = Scene(cfg, gaussians, unicycle=cfg.unicycle, uc_fit_iter=cfg.uc_fit_iter, data_type=cfg.data_type)
+    scene = Scene(cfg, gaussians, data_type=cfg.data_type)
     
     scene.gaussians.training_setup(cfg.opt)
     for iid, dynamic_gaussian in scene.dynamic_gaussians.items():
         dynamic_gaussian.training_setup(cfg.opt)
     
-    unicycles = scene.unicycles
+    if cfg.unicycle:
+        unicycles = create_unicycle_model(scene.getTrainCameras(), cfg.model_path, cfg.uc_fit_iter, cfg.uc_opt_pos, cfg.data_type)
+    else:
+        unicycles = {}
 
     bg_color = [1, 1, 1] if cfg.model.white_background else [0, 0, 0]
     background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
@@ -133,10 +137,10 @@ def training(cfg):
             loss += distort_3d_loss
 
         reg_loss = 0
-        if cfg.uc_reg and (len(unicycles) > 0) and (1000 < iteration) and (iteration < 15000):
+        if cfg.uc_opt_pos and (len(unicycles) > 0) and (1000 < iteration) and (iteration < 15000):
             for track_id, unicycle_pkg in unicycles.items():
                 model = unicycle_pkg['model']
-                reg_loss += 5e-3 * model.reg_loss() + 1e-3 * model.pos_loss()
+                reg_loss += 1e-3 * model.reg_loss() + 1e-4 * model.pos_loss()
             reg_loss = reg_loss / len(unicycles)
             loss += reg_loss
 
@@ -171,7 +175,7 @@ def training(cfg):
                     torch.save((dynamic_gaussian.capture(), iteration), os.path.join(scene.model_path, f"ckpts/dynamic_{iid}_chkpnt{iteration}.pth"))
                 for track_id, unicycle_pkg in unicycles.items():
                     model = unicycle_pkg['model']
-                    torch.save(model.capture(), os.path.join(scene.model_path, f"ckpts/unicycle_{track_id}_chkpnt{iteration}.pth"))
+                    torch.save(model.capture(), os.path.join(scene.model_path, f"ckpts/unicycle_{track_id}.pth"))
                     model.visualize(os.path.join(scene.model_path, "unicycle", f"{track_id}_{iteration}.png"))
 
                 validation(iteration, scene, render, [scene.dynamic_gaussians, unicycles, background])
@@ -191,14 +195,14 @@ def training(cfg):
                     dynamic_gaussian.optimizer.step()
                     dynamic_gaussian.optimizer.zero_grad(set_to_none = True)
 
-                if cfg.unicycle and iteration > 1000:
+                if cfg.unicycle and cfg.uc_opt_pos and iteration > 1000:
                     for track_id, unicycle_pkg in unicycles.items():
                         unicycle_optimizer = unicycle_pkg['optimizer']
                         unicycle_optimizer.step()
                         unicycle_optimizer.zero_grad(set_to_none = True)
-                        if iteration % 1000 == 0:
-                            for g in unicycle_optimizer.param_groups:
-                                g['lr'] /= 2
+                        # if iteration % 5000 == 0:
+                        #     for g in unicycle_optimizer.param_groups:
+                        #         g['lr'] /= 2
 
             # Densification
             if iteration < cfg.opt.densify_until_iter:

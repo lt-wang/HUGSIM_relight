@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from scipy.spatial.transform import Rotation as SCR
+import roma
 from collections import namedtuple
 from sim.utils.agent_controller import constant_headaway
 from sim.utils import agent_controller
@@ -9,7 +10,7 @@ from trajdata import AgentType, UnifiedDataset
 from trajdata.maps import MapAPI
 from trajdata.simulation import SimulationScene
 from sim.utils.sim_utils import rt2pose, pose2rt
-from sim.utils.agent_controller import IDM, AttackPlanner, ConstantPlanner
+from sim.utils.agent_controller import IDM, AttackPlanner, ConstantPlanner, UnicyclePlanner
 import os
 import json
 
@@ -17,7 +18,7 @@ Model = namedtuple('Models', ['model_path', 'controller', 'controller_args'])
 
 
 class planner:
-    def __init__(self, plan_list, dt=0.2, unified_map=None, ground=None):
+    def __init__(self, plan_list, scene_path=None, dt=0.2, unified_map=None, ground=None):
         self.unified_map = unified_map
         self.ground = ground
         self.PREDICT_STEPS = 20
@@ -32,16 +33,28 @@ class planner:
         self.dt = dt
         self.ATTACK_FREQ = 3
         for iid, args in enumerate(plan_list):
-            model = Model(*args[5:])
-            self.stats[f'agent_{iid}'] = torch.tensor(args[:5])  # a, b, height, yaw, v
-            self.stats[f'agent_{iid}'][3] += self.rectify_angle
-            self.route[f'agent_{iid}'] = None
-            self.ckpts[f'agent_{iid}'] = os.path.join(model.model_path, 'gs.pth')
-            with open(os.path.join(model.model_path, 'wlh.json')) as f:
-                self.wlhs[f'agent_{iid}'] = json.load(f)
-            self.controller[f'agent_{iid}'] = getattr(agent_controller, model.controller)(**model.controller_args)
-            if model.controller == "AttackPlanner":
-                self.ATTACK_FREQ = model.controller_args["ATTACK_FREQ"]
+            if args[6] == "UnicyclePlanner":
+                # self.ckpts[f"agent_{iid}"] = os.path.join(scene_path, "ckpts", f"dynamic_{args[7]}_chkpnt30000.pth")
+                # self.wlhs[f'agent_{iid}'] = [2.0, 4.0, 1.5]
+                self.ckpts[f'agent_{iid}'] = os.path.join(args[5], 'gs.pth')
+                with open(os.path.join(args[5], 'wlh.json')) as f:
+                    self.wlhs[f'agent_{iid}'] = json.load(f)
+                uc_configs = args[7]
+                self.controller[f"agent_{iid}"] = UnicyclePlanner(os.path.join(scene_path, "ckpts", f"unicycle_{uc_configs['uc_id']}.pth"), speed=uc_configs['speed'])
+                a, b, v, pitchroll, yaw, h = self.controller[f"agent_{iid}"].uc_model.forward(0.0)
+                self.stats[f'agent_{iid}'] = torch.tensor([a, b, args[2], yaw, v])
+                self.route[f'agent_{iid}'] = None
+            else:
+                model = Model(*args[5:])
+                self.stats[f'agent_{iid}'] = torch.tensor(args[:5])  # a, b, height, yaw, v
+                self.stats[f'agent_{iid}'][3] += self.rectify_angle
+                self.route[f'agent_{iid}'] = None
+                self.ckpts[f'agent_{iid}'] = os.path.join(model.model_path, 'gs.pth')
+                with open(os.path.join(model.model_path, 'wlh.json')) as f:
+                    self.wlhs[f'agent_{iid}'] = json.load(f)
+                self.controller[f'agent_{iid}'] = getattr(agent_controller, model.controller)(**model.controller_args)
+                if model.controller == "AttackPlanner":
+                    self.ATTACK_FREQ = model.controller_args["ATTACK_FREQ"]
 
     def update_ground(self, ground):
         self.ground = ground
@@ -97,6 +110,8 @@ class planner:
                                               new_plan=((t // self.dt) % self.ATTACK_FREQ == 0))
             elif type(controller) is ConstantPlanner:
                 next_xyrv = controller.update(state=stat[[0, 1, 3, 4]], dt=self.dt)
+            elif type(controller) is UnicyclePlanner:
+                next_xyrv = controller.update(dt=self.dt)
             else:
                 raise NotImplementedError
             next_stat = torch.zeros_like(stat)
@@ -104,10 +119,15 @@ class planner:
             next_stat[2] = stat[2]
             self.stats[iid] = next_stat
 
-            h = self.ground_height(next_xyrv[0].numpy(), next_xyrv[1].numpy())
             b2w = np.eye(4)
-            b2w[:3, :3] = SCR.from_euler('y', [-stat[3] - np.pi / 2 - self.rectify_angle]).as_matrix()
-            b2w[:3, 3] = np.array([next_stat[0], h + stat[2], next_stat[1]])
+            h = self.ground_height(next_xyrv[0].numpy(), next_xyrv[1].numpy())
+            if type(controller) is UnicyclePlanner:
+                # b2w[:3, :3] = SCR.from_euler('xzy', [pitch_roll[0], pitch_roll[1], stat[3]]).as_matrix()
+                b2w[:3, :3] = SCR.from_euler('y', [-stat[3]]).as_matrix()
+                b2w[:3, 3] = np.array([next_stat[0], h + stat[2], next_stat[1]])
+            else:
+                b2w[:3, :3] = SCR.from_euler('y', [-stat[3] - np.pi / 2 - self.rectify_angle]).as_matrix()
+                b2w[:3, 3] = np.array([next_stat[0], h + stat[2], next_stat[1]])
             b2ws[iid] = torch.tensor(b2w).float().cuda()
 
         return [b2ws, {}]

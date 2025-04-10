@@ -13,6 +13,7 @@ from sim.utils.plan import planner, UnifiedMap
 from omegaconf import OmegaConf
 import math
 from gaussian_renderer import GaussianModel
+from scene.obj_model import ObjModel
 from gaussian_renderer import render
 import open3d as o3d
 
@@ -63,17 +64,16 @@ class HUGSimEnv(gymnasium.Env):
         Yaw is based on ego car's orientation. 0 means same direction as ego. 
         Right is positive and left is negative.
         """
-        self.planner = planner(plan_list, unified_map=unified_map, ground=self.ground_model, dt=cfg.kinematic.dt)
+        self.planner = planner(plan_list, scene_path=cfg.model_path, unified_map=unified_map, ground=self.ground_model, dt=cfg.kinematic.dt)
         
-        (model_params, first_iter) = torch.load(os.path.join(cfg.model_path, "ckpts", f"chkpnt{cfg.scenario.iteration}.pth"))
+        (model_params, first_iter) = torch.load(os.path.join(cfg.model_path, "ckpts", f"chkpnt{cfg.scenario.iteration}.pth"), weights_only=False)
         self.gaussians.restore(model_params, None)
         
         dynamic_gaussians = {}
         for plan_id in self.planner.ckpts.keys():
-            dynamic_gaussians[plan_id] = GaussianModel(cfg.model.sh_degree, feat_mutable=False)
-            (model_params, first_iter) = torch.load(self.planner.ckpts[plan_id])
+            dynamic_gaussians[plan_id] = ObjModel(cfg.model.sh_degree, feat_mutable=False)
+            (model_params, first_iter) = torch.load(self.planner.ckpts[plan_id], weights_only=False)
             model_params = list(model_params)
-            model_params.append(None)
             dynamic_gaussians[plan_id].restore(model_params, None)
             
         semantic_idx = torch.argmax(self.gaussians.get_full_3D_features, dim=-1, keepdim=True)

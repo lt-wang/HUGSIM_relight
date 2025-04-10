@@ -29,7 +29,7 @@ class unicycle(torch.nn.Module):
         
         self.v = nn.Parameter(F.pad(v, (0, 1), 'constant', v[-1].item()))
         self.pitchroll = eulers[:, :2]
-        self.yaw = nn.Parameter(eulers[:, -1] + (torch.pi / 2))
+        self.yaw = nn.Parameter(eulers[:, -1])
 
         if heights is None:
             self.h = torch.zeros_like(train_timestamp).float()
@@ -48,15 +48,15 @@ class unicycle(torch.nn.Module):
             delta_t = self.train_timestamp[0] - timestamp
             a = self.a[0] - delta_t * torch.cos(self.yaw[0]) * self.v[0]
             b = self.b[0] - delta_t * torch.sin(self.yaw[0]) * self.v[0]
-            return a, b, self.v[0], self.pitchroll[0], self.yaw[0] - (np.pi / 2), self.h[0]
+            return a, b, self.v[0], self.pitchroll[0], self.yaw[0], self.h[0]
         elif timestamp > self.train_timestamp[-1]:
             delta_t = timestamp - self.train_timestamp[-1]
             a = self.a[-1] + delta_t * torch.cos(self.yaw[-1]) * self.v[-1]
             b = self.b[-1] + delta_t * torch.sin(self.yaw[-1]) * self.v[-1]
-            return a, b, self.v[-1], self.pitchroll[-1], self.yaw[-1] - (np.pi / 2), self.h[-1]
+            return a, b, self.v[-1], self.pitchroll[-1], self.yaw[-1], self.h[-1]
         idx = torch.searchsorted(self.train_timestamp, timestamp, side='left')
         if self.train_timestamp[idx] == timestamp:
-            return self.a[idx], self.b[idx], self.v[idx], self.pitchroll[idx], self.yaw[idx] - (np.pi / 2), self.h[idx]
+            return self.a[idx], self.b[idx], self.v[idx], self.pitchroll[idx], self.yaw[idx], self.h[idx]
         else:
             prev_timestamps = self.train_timestamp[idx-1]
             delta_t = timestamp - prev_timestamps
@@ -68,7 +68,7 @@ class unicycle(torch.nn.Module):
             a = prev_a + prev_v * ((torch.sin(yaw) - torch.sin(prev_yaw)) / (omega[idx-1] + 1e-6))
             b = prev_b - prev_v * ((torch.cos(yaw) - torch.cos(prev_yaw)) / (omega[idx-1] + 1e-6))
             h = self.h[idx-1]
-        return a, b, v, self.pitchroll[idx-1], yaw - (np.pi / 2), h
+        return a, b, v, self.pitchroll[idx-1], yaw, h
 
     def capture(self):
         return (
@@ -82,17 +82,31 @@ class unicycle(torch.nn.Module):
             self.delta
         )
     
-    def restore(self, model_args):
+    @classmethod
+    def restore(cls, model_args):
         (
-            self.a,
-            self.b,
-            self.v,
-            self.pitchroll,
-            self.yaw,
-            self.h,
-            self.train_timestamp,
-            self.delta
+            a,
+            b,
+            v,
+            pitchroll,
+            yaw,
+            h,
+            train_timestamp,
+            delta
         ) = model_args
+        model = cls(train_timestamp, 
+                    torch.stack([a.clone().detach(),b.clone().detach()], dim=-1), 
+                    torch.concat([pitchroll.clone().detach(), yaw.clone().detach()[:, None]], dim=-1), 
+                    h.clone().detach())
+        model.a = a
+        model.b = b
+        model.v = v
+        model.pitchroll = pitchroll
+        model.yaw = yaw
+        model.h = h
+        model.train_timestamp = train_timestamp
+        model.delta = delta
+        return model
 
     def visualize(self, save_path, noise_centers=None, gt_centers=None):
         a = self.a.detach().cpu().numpy()
@@ -126,7 +140,7 @@ class unicycle(torch.nn.Module):
         return torch.mean((self.a - self.input_a) ** 2 + (self.b - self.input_b) ** 2) * 10
 
 
-def create_unicycle_model(train_cams, model_path, opt_iter=0, data_type='kitti'):
+def create_unicycle_model(train_cams, model_path, opt_iter=0, opt_pos=False, data_type='kitti'):
     unicycle_models = {}
     if data_type == 'kitti':
         cameras = [cam for cam in train_cams if 'cam_0' in cam.image_name]
@@ -134,19 +148,25 @@ def create_unicycle_model(train_cams, model_path, opt_iter=0, data_type='kitti')
         cameras = [cam for cam in train_cams if 'cam_1' in cam.image_name]
     elif data_type == 'nuscenes':
         cameras = [cam for cam in train_cams if (('CAM_FRONT' in cam.image_name) and ('LEFT' not in cam.image_name) and ('RIGHT' not in cam.image_name))]
+    elif data_type == 'pandaset':
+        cameras = [cam for cam in train_cams if 'front_camera' in cam.image_name]
     else:
         raise NotImplementedError    
+    
+    cameras = sorted(cameras, key=lambda x: x.timestamp)
 
+    os.makedirs(os.path.join(model_path, "unicycle"), exist_ok=True)
+
+    start_time = cameras[0].timestamp
     all_centers, all_heights, all_eulers, all_timestamps = defaultdict(list), defaultdict(list), defaultdict(list), defaultdict(list)
-    seq_timestamps = []
     for cam in cameras:
-        t = cam.timestamp
-        seq_timestamps.append(t)
+        t = cam.timestamp - start_time
         for track_id, b2w in cam.dynamics.items():
             all_centers[track_id].append(b2w[[0, 2], 3])
             all_heights[track_id].append(b2w[1, 3])
             eulers = roma.rotmat_to_euler('xzy', b2w[:3, :3])
-            all_eulers[track_id].append(eulers)
+            all_eulers[track_id].append(-eulers + torch.pi / 2)
+            # all_eulers[track_id].append(eulers)
             all_timestamps[track_id].append(t)
 
     for track_id in all_centers.keys():
@@ -156,12 +176,17 @@ def create_unicycle_model(train_cams, model_path, opt_iter=0, data_type='kitti')
         eulers = torch.stack(all_eulers[track_id]).cuda()
 
         model = unicycle(timestamps, centers.clone(), eulers.clone(), heights.clone())
+        model.visualize(os.path.join(model_path, "unicycle", f"{track_id}_init.png"))
         l = [
-            {'params': [model.a], 'lr': 1e-3, "name": "a"},
-            {'params': [model.b], 'lr': 1e-3, "name": "b"},
             {'params': [model.v], 'lr': 1e-3, "name": "v"},
             {'params': [model.yaw], 'lr': 1e-4, "name": "yaw"},
         ]
+
+        if opt_pos:
+            l.extend([
+                {'params': [model.a], 'lr': 1e-3, "name": "a"},
+                {'params': [model.b], 'lr': 1e-3, "name": "b"},
+            ])
 
         optimizer = optim.Adam(l, lr=0.0)
 
@@ -177,11 +202,29 @@ def create_unicycle_model(train_cams, model_path, opt_iter=0, data_type='kitti')
                                     'optimizer': optimizer,
                                     'input_centers': centers}
     
-    os.makedirs(os.path.join(model_path, "unicycle"), exist_ok=True)
-    for track_id, unicycle_pkg in unicycle_models.items():
-        model = unicycle_pkg['model']
-        optimizer = unicycle_pkg['optimizer']
-        
-        model.visualize(os.path.join(model_path, "unicycle", f"{track_id}_init.png"))
+        model.visualize(os.path.join(model_path, "unicycle", f"{track_id}_iter0.png"))
+        torch.save(model.capture(), os.path.join(model_path, f"ckpts/unicycle_{track_id}.pth"))
 
     return unicycle_models
+
+
+if __name__ == "__main__":
+    from scene import Scene, GaussianModel  
+    from omegaconf import OmegaConf
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser(description="Training script parameters")
+    parser.add_argument("--base_cfg", type=str, default="./configs/gs_base.yaml")
+    parser.add_argument("--data_cfg", type=str, default="./configs/nusc.yaml")
+    parser.add_argument("--source_path", type=str, default="")
+    parser.add_argument("--model_path", type=str, default="")
+    args = parser.parse_args()
+    cfg = OmegaConf.merge(OmegaConf.load(args.base_cfg), OmegaConf.load(args.data_cfg))
+    if len(args.source_path) > 0:
+        cfg.source_path = args.source_path
+    if len(args.model_path) > 0:
+        cfg.model_path = args.model_path
+    gaussians = GaussianModel(3, feat_mutable=True)
+    print("loading scene...")
+    scene = Scene(cfg, gaussians, data_type=cfg.data_type)
+    create_unicycle_model(scene.getTrainCameras(), cfg.model_path, 500, False, cfg.data_type)

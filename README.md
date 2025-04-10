@@ -90,6 +90,8 @@ python -u train.py --data_cfg ./configs/${dataset_name}.yaml \
 
 # Configuration with GUI
 
+**Note that this GUI is only used for configuration scenarios, rather than simulation.**
+
 First convert the vehicles and scenes to splat format.
 The splat format downgrades the quality of only for visulization.
 Note that the GUI is only for configuration, the rendering quality in GUI is not the results during simulation.
@@ -109,6 +111,9 @@ python app.py --scene ${sample_data/scene-0383} --car_folder ${sample_data/3DRea
 
 You can configure the scenario with the GUI, and download the yaml file to use in simulation.
 
+<video id="video" controls="" preload="none" poster="封面">
+      <source id="mp4" src="./assets/hugsim_gui.mp4" type="video/mp4">
+</video>
 
 # Simulation
 
@@ -133,7 +138,7 @@ Paths in **configs/sim/\*\_base.yaml** should be updated as paths on your machin
 
 ``` bash
 CUDA_VISIBLE_DEVICES=${sim_cuda} \
-python closed_loop.py --scenario_path ${scenario_cfg_path} \
+python closed_loop.py --scenario_path ./configs/benchmark/${dataset_name}/${scenario_name}.yaml \
             --base_path ./configs/sim/${dataset_name}_base.yaml \
             --camera_path ./configs/sim/${dataset_name}_camera.yaml \
             --kinematic_path ./configs/sim/kinematic.yaml \

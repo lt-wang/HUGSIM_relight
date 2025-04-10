@@ -7,6 +7,7 @@ import torch
 import time
 import math
 from copy import deepcopy
+from utils.dynamic_utils import unicycle
 
 
 def constant_tracking(state, path, dt):
@@ -306,4 +307,17 @@ class ConstantPlanner:
         a, b, yaw, v = state
         a = a - v * np.sin(yaw) * dt
         b = b + v * np.cos(yaw) * dt
+        return torch.tensor([a, b, yaw, v])
+    
+
+class UnicyclePlanner:
+    def __init__(self, uc_path, speed=1.0):
+        self.uc_model = unicycle.restore(torch.load(uc_path, weights_only=False))
+        self.t = 0
+        self.speed = speed
+    
+    def update(self, dt):
+        self.t += dt * self.speed
+        a, b, v, pitchroll, yaw, h = self.uc_model.forward(self.t)
+        # return torch.tensor([a, b, yaw, v]), pitchroll.detach().cpu(), h.item()
         return torch.tensor([a, b, yaw, v])

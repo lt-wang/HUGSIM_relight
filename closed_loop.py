@@ -134,7 +134,8 @@ if __name__ == "__main__":
         create_gym_env(cfg, output)
         check_alive(process)
     except Exception as e:
-        print(e)
+        import traceback
+        traceback.print_exc()
         process.kill()
     
     # # For debug
