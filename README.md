@@ -97,7 +97,7 @@ You can configure the scenario with the GUI, and download the yaml file to use i
 
 # Simulation
 
-**Before simulation, [UniAD_SIM](https://github.com/hyzhou404/UniAD_SIM), [VAD_SIM](https://github.com/hyzhou404/VAD_SIM) and [NAVSIM](https://github.com/hyzhou404/NAVSIM) client should be installed.**
+**Before simulation, [UniAD_SIM](https://github.com/hyzhou404/UniAD_SIM), [VAD_SIM](https://github.com/hyzhou404/VAD_SIM) and [NAVSIM](https://github.com/hyzhou404/NAVSIM) client should be installed. The client environments are allowed to be separated from the HUGSIM environment.**
 
 The dependencies for NAVSIM are already specified as the pixi environment file, so you don't need to manully install the dependencies again.
 
