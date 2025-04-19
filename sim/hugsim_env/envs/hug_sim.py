@@ -80,10 +80,10 @@ class HUGSimEnv(gymnasium.Env):
         ground_xyz = self.gaussians.get_full_xyz[(semantic_idx == 0)[:, 0]].detach().cpu().numpy()
         scene_xyz = self.gaussians.get_full_xyz[((semantic_idx > 1) & (semantic_idx != 10))[:, 0]].detach().cpu().numpy()
         ground_pcd = o3d.geometry.PointCloud()
-        ground_pcd.points = o3d.utility.Vector3dVector(ground_xyz)
+        ground_pcd.points = o3d.utility.Vector3dVector(ground_xyz.astype(float))
         o3d.io.write_point_cloud(os.path.join(output, 'ground.ply'), ground_pcd)
         scene_pcd = o3d.geometry.PointCloud()
-        scene_pcd.points = o3d.utility.Vector3dVector(scene_xyz)
+        scene_pcd.points = o3d.utility.Vector3dVector(scene_xyz.astype(float))
         o3d.io.write_point_cloud(os.path.join(output, 'scene.ply'), scene_pcd)
             
         unicycles = {}

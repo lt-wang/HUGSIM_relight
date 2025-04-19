@@ -8,3 +8,6 @@ __pycache__
 output
 build
 shell
+# pixi environments
+.pixi
+*.egg-info

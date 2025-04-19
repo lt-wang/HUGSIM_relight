@@ -31,41 +31,21 @@
 
 # Installation
 
-Requirements are not in principle hard requirements, but there might be some differences (not tested):
- - Linux
- - Python 3.11
- - CUDA 11.8
- - colmap 3.10-dev
- - Pytorch 2.5.1 / Pytorch 2.2.0
-  
-Create conda environment needed to run HUGSIM with:
+First, install [pixi](https://pixi.sh/latest/):
+
 ``` bash
-conda create --name hugsim python=3.11
+curl -fsSL https://pixi.sh/install.sh | sh
 ```
 
-Please install these packages following official instructions
- - [Pytorch](https://pytorch.org/)
- - [simple_waymo_open_dataset_reader](https://github.com/gdlg/simple-waymo-open-dataset-reader)
- - [tinycudann](https://github.com/NVlabs/tiny-cuda-nn)
- - [unidepth](https://github.com/lpiccinelli-eth/UniDepth)
- - [flow_vis_torch](https://github.com/ChristophReich1996/Optical-Flow-Visualization-PyTorch)
- - [pytorch3d](https://github.com/facebookresearch/pytorch3d/blob/main/INSTALL.md)
- - [kitti360Scripts](https://github.com/autonomousvision/kitti360Scripts)
- - [nuscenes-devkit](https://github.com/nutonomy/nuscenes-devkit) (have to install from the source code for python 3.11)
- - [HUGSIM_splat](https://github.com/hyzhou404/HUGSIM_splat)
+As the repository depends on some packages that can only be installed from source code, and rely on pytorch and cuda to compile, the installation of pixi environment is seperated as **two steps**:
 
-Please install packages required by [InverseForm](https://github.com/Qualcomm-AI-research/InverseForm/blob/main/docker/Dockerfile)
+1. Comment the packages below `# install from source code` in `pixi.toml`, then run `pixi install` to install the packages from pypi.
+2. Uncomment the packages in the previous step, then run `pixi install` to install these packages from source code.
 
-Install remaining dependencies by:
-``` bash
-pip install -r requirements.txt
-```
+Change into the **pixi environment** by using the command `pixi shell`.
 
-To run the closed-loop simulation, the hug_sim Gymnasium environment should be installed:
-``` bash
-cd ./sim
-pip install -e .
-```
+Or you can use `pixi run <command>` to run a command in the **pixi environment**.
+
 
 # Data Preparation
 
@@ -118,6 +98,8 @@ You can configure the scenario with the GUI, and download the yaml file to use i
 # Simulation
 
 **Before simulation, [UniAD_SIM](https://github.com/hyzhou404/UniAD_SIM), [VAD_SIM](https://github.com/hyzhou404/VAD_SIM) and [NAVSIM](https://github.com/hyzhou404/NAVSIM) client should be installed.**
+
+The dependencies for NAVSIM are already specified as the pixi environment file, so you don't need to manully install the dependencies again.
 
 In **closed_loop.py**, we automatically launch autonomous driving algorithms. In practice, you may encounter errors due to an incorrect environment, path, and etc. For debugging purposes, you can modify the last part of code as:
 ```python
