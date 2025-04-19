@@ -99,7 +99,7 @@ You can configure the scenario with the GUI, and download the yaml file to use i
 
 **Before simulation, [UniAD_SIM](https://github.com/hyzhou404/UniAD_SIM), [VAD_SIM](https://github.com/hyzhou404/VAD_SIM) and [NAVSIM](https://github.com/hyzhou404/NAVSIM) client should be installed. The client environments are allowed to be separated from the HUGSIM environment.**
 
-The dependencies for NAVSIM are already specified as the pixi environment file, so you don't need to manully install the dependencies again.
+The dependencies for NAVSIM are already specified as the pixi environment file, so you don't need to manually install the dependencies.
 
 In **closed_loop.py**, we automatically launch autonomous driving algorithms. In practice, you may encounter errors due to an incorrect environment, path, and etc. For debugging purposes, you can modify the last part of code as:
 ```python
