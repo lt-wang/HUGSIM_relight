@@ -51,7 +51,7 @@ Or you can use `pixi run <command>` to run a command in the **pixi environment**
 
 Please refer to [Data Preparation Document](data/README.md)
 
-You can download sample data from [here](https://huggingface.co/datasets/hyzhou404/HUGSIM/tree/main/sample_data), which includes a sample sequence, results of the sequence reconstruction, and results of 3dRealCar vehicles reconstruction.
+You can download sample data from [here](https://huggingface.co/datasets/hyzhou404/HUGSIM/tree/main/sample_data).
 
 # Reconstruction
 
@@ -68,17 +68,27 @@ python -u train.py --data_cfg ./configs/${dataset_name}.yaml \
         --source_path ${input_path} --model_path ${output_path}
 ```
 
-# Configuration with GUI
+# Scene Export
 
-**Note that this GUI is only used for configuration scenarios, rather than simulation.**
+The reconstructed scene folders contain some information that won't be utilized during the simulation. The scenes are expected to be exported as a minimized format to facilitate easier sharing and simulation.
+```bash
+ python eval_render/export_scene.py --model_path ${recon_scene_path} --output_path ${export_path} --iteration 30000
+``` 
+We've made some changes in the capturing and reloading code. If you would like to convert scenes from previous version (before commit 1ca821a8) of our code, add `--ver0` in the above command. 
 
-First convert the vehicles and scenes to splat format.
-The splat format downgrades the quality of only for visulization.
-Note that the GUI is only for configuration, the rendering quality in GUI is not the results during simulation.
+# Vehicles, Scenes and Scenarios
+
+We have released all the 3DRealCar files, 23 scenes and corresponding 158 scenarios available at the [release link](https://huggingface.co/datasets/XDimLab/HUGSIM). We plan to hold a competition, so some scenarios and scenarios will be hosted privately.
+
+# Scenarios configuration with GUI
+
+**Note that this GUI is only used for configuration scenarios, rather than simulation. The rendering quality in GUI is not the results during simulation**
+
+First convert the vehicles and scenes to splat and semantic format.
 
 ``` bash
-python eval_render/convert_vehicles.py --vehicle_path ${sample_data/3DRealCar}
-python eval_render/convert_scene.py --model_path ${sample_data/scene-0383} --iteration 30000
+python eval_render/convert_vehicles.py --vehicle_path ${PATH_3DRealCar}
+python eval_render/convert_scene.py --model_path ${PATH_Scene}
 ```
 
 Then, you can run the GUI to configure the scenario. 
@@ -86,14 +96,12 @@ Then, you can run the GUI to configure the scenario.
 
 ``` bash
 cd gui
-python app.py --scene ${sample_data/scene-0383} --car_folder ${sample_data/3DRealCar/converted}
+python app.py --scene ${PATH_Scene} --car_folder ${PATH_3DRealCar/converted}
 ```
 
 You can configure the scenario with the GUI, and download the yaml file to use in simulation.
 
-<video id="video" controls="" preload="none" poster="封面">
-      <source id="mp4" src="./assets/hugsim_gui.mp4" type="video/mp4">
-</video>
+Here is a video for the GUI usage demonstration: [GUI Video](https://github.com/hyzhou404/HUGSIM/blob/main/assets/hugsim_gui.mp4)
 
 # Simulation
 
@@ -101,22 +109,9 @@ You can configure the scenario with the GUI, and download the yaml file to use i
 
 The dependencies for NAVSIM are already specified as the pixi environment file, so you don't need to manually install the dependencies.
 
-In **closed_loop.py**, we automatically launch autonomous driving algorithms. In practice, you may encounter errors due to an incorrect environment, path, and etc. For debugging purposes, you can modify the last part of code as:
-```python
-# process = launch(ad_path, args.ad_cuda, output)
-# try:
-#     create_gym_env(cfg, output)
-#     check_alive(process)
-# except Exception as e:
-#     print(e)
-#     process.kill()
-
-# For debug
-create_gym_env(cfg, output)
-```
+In **closed_loop.py**, we automatically launch autonomous driving algorithms.
 
 Paths in **configs/sim/\*\_base.yaml** should be updated as paths on your machine.
-
 
 ``` bash
 CUDA_VISIBLE_DEVICES=${sim_cuda} \
@@ -128,12 +123,15 @@ python closed_loop.py --scenario_path ./configs/benchmark/${dataset_name}/${scen
             --ad_cuda ${ad_cuda}
 ```
 
-Run the following commands to execute the provided examples.
+Run the following commands to execute.
 
 ```bash
 sim_cuda=0
 ad_cuda=1
-scenario_dir=./configs/benchmark/nuscenes
+
+# change this variable as the scenario path on your machine
+scenario_dir=${SCENARIO_PATH} 
+
 for cfg in ${scenario_dir}/*.yaml; do
     echo ${cfg}
     CUDA_VISIBLE_DEVICES=${sim_cuda} \
@@ -144,6 +142,20 @@ for cfg in ${scenario_dir}/*.yaml; do
                         --ad uniad \
                         --ad_cuda ${ad_cuda}
 done
+```
+
+In practice, you may encounter errors due to an incorrect environment, path, and etc. For debugging purposes, you can modify the last part of code as:
+```python
+# process = launch(ad_path, args.ad_cuda, output)
+# try:
+#     create_gym_env(cfg, output)
+#     check_alive(process)
+# except Exception as e:
+#     print(e)
+#     process.kill()
+
+# For debug
+create_gym_env(cfg, output)
 ```
 
 

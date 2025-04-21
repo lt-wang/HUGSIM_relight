@@ -102,12 +102,8 @@ class GaussianModel:
             self._scaling,
             self._rotation,
             self._opacity,
-            self.max_radii2D,
-            self.xyz_gradient_accum,
-            self.denom,
-            self.optimizer.state_dict(),
             self.spatial_lr_scale,
-            self.appearance_model,
+            self.appearance_model.state_dict(),
             ground_model_params,
         )
     
@@ -120,19 +116,13 @@ class GaussianModel:
         self._scaling, 
         self._rotation, 
         self._opacity,
-        self.max_radii2D, 
-        xyz_gradient_accum, 
-        denom,
-        opt_dict, 
         self.spatial_lr_scale,
-        self.appearance_model,
+        appearance_state_dict,
         ground_model_params,
         ) = model_args
-        self.xyz_gradient_accum = xyz_gradient_accum
-        self.denom = denom
+        self.appearance_model.load_state_dict(appearance_state_dict, strict=False)
         if training_args is not None:
             self.training_setup(training_args)
-            self.optimizer.load_state_dict(opt_dict)
         if ground_model_params is not None:
             self.ground_model = GroundModel(self.max_sh_degree, model_args=ground_model_params)
         

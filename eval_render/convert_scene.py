@@ -5,17 +5,18 @@ sys.path.append(os.getcwd())
 from gaussian_renderer import GaussianModel
 from argparse import ArgumentParser
 import torch
+from omegaconf import OmegaConf
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Testing script parameters")
     parser.add_argument("--model_path", type=str)
-    parser.add_argument("--iteration", type=int, default=30_000)
     args = parser.parse_args()
 
-    print(f"Loading {args.model_path} {args.iteration} checkpoints ...")
+    cfg = OmegaConf.load(os.path.join(args.model_path, "cfg.yaml"))
+    print(f"Loading {args.model_path} checkpoints ...")
 
-    gaussians = GaussianModel(3, affine=True)
-    (model_params, first_iter) = torch.load(os.path.join(args.model_path, "ckpts", f"chkpnt{args.iteration}.pth"), weights_only=False)
+    gaussians = GaussianModel(cfg.model.sh_degree, affine=True)
+    (model_params, first_iter) = torch.load(os.path.join(args.model_path, "scene.pth"), weights_only=False)
     gaussians.restore(model_params, None)
 
     print(f"Saving semantic pcd to {args.model_path}/vis ...")

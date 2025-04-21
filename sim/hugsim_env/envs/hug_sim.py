@@ -66,13 +66,13 @@ class HUGSimEnv(gymnasium.Env):
         """
         self.planner = planner(plan_list, scene_path=cfg.model_path, unified_map=unified_map, ground=self.ground_model, dt=cfg.kinematic.dt)
         
-        (model_params, first_iter) = torch.load(os.path.join(cfg.model_path, "ckpts", f"chkpnt{cfg.scenario.iteration}.pth"), weights_only=False)
+        (model_params, iteration) = torch.load(os.path.join(cfg.model_path, "scene.pth"), weights_only=False)
         self.gaussians.restore(model_params, None)
         
         dynamic_gaussians = {}
         for plan_id in self.planner.ckpts.keys():
             dynamic_gaussians[plan_id] = ObjModel(cfg.model.sh_degree, feat_mutable=False)
-            (model_params, first_iter) = torch.load(self.planner.ckpts[plan_id], weights_only=False)
+            (model_params, iteration) = torch.load(self.planner.ckpts[plan_id], weights_only=False)
             model_params = list(model_params)
             dynamic_gaussians[plan_id].restore(model_params, None)
             
@@ -220,7 +220,8 @@ class HUGSimEnv(gymnasium.Env):
             c2front = v2front @ np.linalg.inv(v2c) @ self.cam_rect
             c2w = self.ego @ c2front
             viewpoint = create_cam(intrinsic, c2w)
-            render_pkg = self.render_fn(viewpoint=viewpoint, prev_viewpoint=None, **self.render_kwargs)
+            with torch.no_grad():
+                render_pkg = self.render_fn(viewpoint=viewpoint, prev_viewpoint=None, **self.render_kwargs)
             rgb = (torch.permute(render_pkg['render'].clamp(0, 1), (1,2,0)).detach().cpu().numpy() * 255).astype(np.uint8)
             smt = torch.argmax(render_pkg['feats'], dim=0).detach().cpu().numpy().astype(np.uint8)
             depth = render_pkg['depth'][0].detach().cpu().numpy()

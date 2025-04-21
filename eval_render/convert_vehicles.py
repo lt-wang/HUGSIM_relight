@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.getcwd())
 
-from gaussian_renderer import GaussianModel
+from scene.obj_model import ObjModel
 from argparse import ArgumentParser
 import torch
 from glob import glob
@@ -18,10 +18,9 @@ if __name__ == "__main__":
     for vehicle_file in vehicle_files:
         vehicle_name = os.path.basename(os.path.dirname(vehicle_file))
         print(f"Loading {vehicle_file} ...")
-        gaussians = GaussianModel(3, feat_mutable=False)
+        gaussians = ObjModel(3, feat_mutable=False)
         (model_params, first_iter) = torch.load(vehicle_file, weights_only=False)
         model_params = list(model_params)
-        model_params.append(None)
         gaussians.restore(model_params, None)
         print(f"Saving {vehicle_name} as inria ply and splat format ...")
         gaussians.save_splat(os.path.join(args.vehicle_path, "converted", f"{vehicle_name}.ply"), os.path.join(args.vehicle_path, "converted", f"{vehicle_name}.splat"))

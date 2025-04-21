@@ -1,5 +1,5 @@
 realcar_path: /nas/users/hyzhou/PAMI2024/release/3DRealCar
-model_base: /nas/users/hyzhou/PAMI2024/release/outputs/nusc
+model_base: /nas/users/hyzhou/PAMI2024/release/ss/scenes/nuscenes
 uniad_path:  /nas/users/hyzhou/PAMI2024/release/UniAD_Sim/tools/e2e.sh
 vad_path:  /nas/users/hyzhou/PAMI2024/release/VAD_Sim/tools/e2e.sh
 ltf_path: /nas/users/hyzhou/PAMI2024/release/navsim/ltf_e2e.sh

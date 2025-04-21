@@ -40,7 +40,7 @@ class planner:
                 with open(os.path.join(args[5], 'wlh.json')) as f:
                     self.wlhs[f'agent_{iid}'] = json.load(f)
                 uc_configs = args[7]
-                self.controller[f"agent_{iid}"] = UnicyclePlanner(os.path.join(scene_path, "ckpts", f"unicycle_{uc_configs['uc_id']}.pth"), speed=uc_configs['speed'])
+                self.controller[f"agent_{iid}"] = UnicyclePlanner(os.path.join(scene_path, f"unicycle_{uc_configs['uc_id']}.pth"), speed=uc_configs['speed'])
                 a, b, v, pitchroll, yaw, h = self.controller[f"agent_{iid}"].uc_model.forward(0.0)
                 self.stats[f'agent_{iid}'] = torch.tensor([a, b, args[2], yaw, v])
                 self.route[f'agent_{iid}'] = None

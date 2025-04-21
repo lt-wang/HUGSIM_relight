@@ -1,5 +1,5 @@
 realcar_path: /nas/users/hyzhou/PAMI2024/release/3DRealCar
-model_base: /nas/users/hyzhou/PAMI2024/release/outputs/kitti360
+model_base: /nas/users/hyzhou/PAMI2024/release/ss/scenes/kitti360
 uniad_path: /nas/users/hyzhou/code/UniAD_Sim/tools/e2e.sh
 vad_path: /nas/users/hyzhou/code/VAD_Sim/tools/e2e.sh
 ltf_path: /nas/users/hyzhou/code/navsim/ltf_e2e.sh
