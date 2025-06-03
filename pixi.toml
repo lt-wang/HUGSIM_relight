@@ -6,6 +6,7 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
+install-apex = { cmd = "sh -c '[ -d apex ] || git clone https://github.com/NVIDIA/apex.git apex' && cd apex && git checkout ac8214ee6ba77c0037c693828e39d83654d25720 && python setup.py install --cuda_ext --cpp_ext", cwd = "data/InverseForm"}
 
 [dependencies]
 python = "==3.11.10"
@@ -54,6 +55,8 @@ piexif = ">=1.1.3, <2"
 jupyter = ">=1.1.1, <2"
 ipdb = ">=0.13.13, <0.14"
 numpy = ">=1.24.3, <2"
+torch-fidelity = ">=0.3.0, <0.4"
+huggingface-hub = ">=0.32.0, <0.33"
 
 # install from source code
 hugsim-env = { path = "./sim", editable = true }
@@ -67,4 +70,5 @@ kitti360Scripts = { git = "https://github.com/autonomousvision/kitti360Scripts.g
 simple-waymo-open-dataset-reader = { git = "https://github.com/gdlg/simple-waymo-open-dataset-reader.git", rev = "master" }
 pytorch3d = { git = "https://github.com/facebookresearch/pytorch3d.git", rev = "stable" }
 nuscenes-devkit = { git = "https://github.com/hyzhou404/nuscenes-devkit.git", rev = "master"}
+moviepy = ">=2.2.1, <3"
 

@@ -19,7 +19,7 @@ if __name__ == '__main__':
     args = get_opts()
     
     print('loading depth model...')
-    model = UniDepthV2.from_pretrained("/nas/users/hyzhou/model_zoo/unidepth")
+    model = UniDepthV2.from_pretrained("lpiccinelli/unidepth-v2-vitl14", force_download=True)
     model = model.to("cuda")
     model.eval()
     print("Depth model loaded")

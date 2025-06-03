@@ -98,12 +98,14 @@ environments:
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/f9/68/2bdc7b46b5f543dd865575f9d19716866bdb76e50dd33b71ed1a3dd8bb42/gymnasium-1.1.1-py3-none-any.whl#sha256=9c167ec0a2b388666e37f63b2849cd2552f7f5b71938574c637bb36487eb928a
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/95/04/ff642e65ad6b90db43e668d70ffb6736436c7ce41fcc549f4e9472234127/h11-0.14.0-py3-none-any.whl#sha256=e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/03/71/c99f662d4832c8835453cf3476f95daa28372023bda4aa1fca9e97c24f09/h5py-3.13.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl#sha256=782ff0ac39f455f21fd1c8ebc007328f65f43d56718a89327eec76677ebf238a
+      - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/9f/a7/693dc9f34f979e30a378125e2150a0b2d8d166e6d83ce3950eeb81e560aa/hf_xet-1.1.2-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl#sha256=6b29ac84298147fe9164cc55ad994ba47399f90b5d045b0b803b99cf5f06d8ec
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/18/8d/f052b1e336bb2c1fc7ed1aaed898aa570c0b61a09707b108979d9fc6e308/httpcore-1.0.8-py3-none-any.whl#sha256=5254cf149bcb5f75e9d1b2b9f729ea4a4b883d1ad7379fc632b727cec23674be
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl#sha256=d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
-      - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/93/27/1fb384a841e9661faad1c31cbfa62864f59632e876df5d795234da51c395/huggingface_hub-0.30.2-py3-none-any.whl#sha256=68ff05969927058cfa41df4f2155d4bb48f5f54f719dd0390103eefa9b191e28
-      - pypi: git+https://github.com/hyzhou404/HUGSIM_splat.git?rev=main#c116c612efc97cb35cf7611c96423a28392c0508
+      - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/3a/60/90aae898b0a9f3cd65f50718c33b1f1dbfb1527d10db754e99e14e2b0a1d/huggingface_hub-0.32.0-py3-none-any.whl#sha256=e56e94109649ce6ebdb59b4e393ee3543ec0eca2eab4f41b269e1d885c88d08c
+      - pypi: git+https://github.com/hyzhou404/HUGSIM_splat.git?rev=main#88f2a40c4e2f6bafde2beeaba6c43bbb0ccb1f5f
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl#sha256=946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/cb/bd/b394387b598ed84d8d0fa90611a90bee0adc2021820ad5729f7ced74a8e2/imageio-2.37.0-py3-none-any.whl#sha256=11efa15b87bc7871b61590326b2d635439acc321cf7f8ce996f812543ce10eed
+      - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/a0/2d/43c8522a2038e9d0e7dbdf3a61195ecc31ca576fb1527a528c877e87d973/imageio_ffmpeg-0.6.0-py3-none-manylinux2014_x86_64.whl#sha256=c7e46fcec401dd990405049d2e2f475e2b397779df2519b544b8aab515195282
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/79/9d/0fb148dc4d6fa4a7dd1d8378168d9b4cd8d4560a6fbf6f0121c5fc34eb68/importlib_metadata-8.6.1-py3-none-any.whl#sha256=02a89390c1e15fdfdc0d7c6b25cb3e62650d0494005c97d6f148bf5b9787525e
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/72/73/b3d451dfc523756cf177d3ebb0af76dc7751b341c60e2a21871be400ae29/iopath-0.1.10.tar.gz#sha256=3311c16a4d9137223e20f141655759933e1eda24f8bff166af834af3c645ef01
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/0c/4c/b075da0092003d9a55cf2ecc1cae9384a1ca4f650d51b00fc59875fe76f6/ipdb-0.13.13-py3-none-any.whl#sha256=45529994741c4ab6d2388bfa5d7b725c2cf7fe9deffabdb8a6113aa5ed449ed4
@@ -133,7 +135,7 @@ environments:
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/b1/dd/ead9d8ea85bf202d90cc513b533f9c363121c7792674f78e0d8a854b63b4/jupyterlab_pygments-0.3.0-py3-none-any.whl#sha256=841a89020971da1d8693f1a99997aefc5dc424bb1b251fd6322462a1b8842780
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/54/09/2032e7d15c544a0e3cd831c51d77a8ca57f7555b2e1b2922142eddb02a84/jupyterlab_server-2.27.3-py3-none-any.whl#sha256=e697488f66c3db49df675158a77b3b017520d772c6e1548c7d9bcc5df7944ee4
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/64/7a/f2479ba401e02f7fcbd3fc6af201eac888eaa188574b8e9df19452ab4972/jupyterlab_widgets-3.0.14-py3-none-any.whl#sha256=54c33e3306b7fca139d165d6190dc6c0627aafa5d14adfc974a4e9a3d26cb703
-      - pypi: git+https://github.com/autonomousvision/kitti360Scripts.git?rev=master#d4d4885102f72ea8d96c9e72e2ff03a8834353a4
+      - pypi: git+https://github.com/autonomousvision/kitti360Scripts.git?rev=master#40ee015de8277b2d907d32a30cdbd97072c7d7c3
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/3a/97/5edbed69a9d0caa2e4aa616ae7df8127e10f6586940aa683a496c2c280b9/kiwisolver-1.4.8-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl#sha256=3a96c0e790ee875d65e340ab383700e2b4891677b7fcd30a699146f9384a2bb0
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/f2/33/7721a4f69dd5f020c30de456d7b948fea8d3897d9f29a51f7538948ee7e2/kornia-0.8.0-py2.py3-none-any.whl#sha256=028711b0902dd7c0c79ddd20b6299b96f280eb2e475e9717fc8e0a0aac629bc2
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/eb/b9/46ffae8b1acfb00d08110440ce7ee00f0a92c0856829b76c0e10be394042/kornia_rs-0.1.8-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl#sha256=b64be28fbac1f2e1bab3903b5016e1a957968fe43141ee7866c2ec5ebafc71ab
@@ -147,6 +149,7 @@ environments:
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl#sha256=84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/f2/e9/1dd3f33ee8cab8107366c4b8610c6cd36499ef096b88a535e05e70612269/mediapy-1.2.3-py3-none-any.whl#sha256=d7d185dcdd72a6dfed7e1b9a8e73731ca763488086afca210107f0f48ba65c4b
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/01/4d/23c4e4f09da849e127e9f123241946c23c1e30f45a88366879e064211815/mistune-3.1.3-py3-none-any.whl#sha256=1a32314113cff28aa6432e99e522677c8587fd83e3d51c29b82a52409c842bd9
+      - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/9a/73/7d3b2010baa0b5eb1e4dfa9e4385e89b6716be76f2fa21a6c0fe34b68e5a/moviepy-2.2.1-py3-none-any.whl#sha256=6b56803fec2ac54b557404126ac1160e65448e03798fa282bd23e8fab3795060
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl#sha256=a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/a8/a1/ad7b84b91ab5a324e707f4c9761633e357820b011a01e34ce658c1dda7cc/msgpack-1.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl#sha256=5e1da8f11a3dd397f0a32c76165cf0c4eb95b31013a94f6ecc0b280c05c91b59
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/80/b3/5781eb874f04cb1e882a7d93cf30abcb00362a3205c5f3708a7434a1a2ac/narwhals-1.35.0-py3-none-any.whl#sha256=7562af132fa3f8aaaf34dc96d7ec95bdca29d1c795e8fcf14e01edf1d32122bc
@@ -194,6 +197,7 @@ environments:
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/02/65/ad2bc85f7377f5cfba5d4466d5474423a3fb7f6a97fd807c06f92dd3e721/plotly-6.0.1-py3-none-any.whl#sha256=4714db20fea57a435692c548a4eb4fae454f7daddf15f8d8ba7e1045681d7768
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/49/ac/3d0ca39b304cbeee43a80ac8ea5ba85576373c00e30fb3e1c5d51bfa7e20/plyfile-1.1-py3-none-any.whl#sha256=897acde0bbe94af4f6c3866b2c0af2e889ae3533fd5c4f3d3318a0c421fcbe35
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/f7/60/1974cfdd5bb770568ddc6f89f3e0df4cfdd1acffd5a609dff5e95f48c6e2/portalocker-3.1.1-py3-none-any.whl#sha256=80e984e24de292ff258a5bea0e4f3f778fff84c0ae1275dbaebc4658de4aacb3
+      - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/c1/1b/f7ea6cde25621cd9236541c66ff018f4268012a534ec31032bcb187dc5e7/proglog-0.1.12-py3-none-any.whl#sha256=ccaafce51e80a81c65dc907a460c07ccb8ec1f78dc660cfd8f9ec3a22f01b84c
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/ff/c2/ab7d37426c179ceb9aeb109a85cda8948bb269b7561a0be870cc656eefe4/prometheus_client-0.21.1-py3-none-any.whl#sha256=594b45c410d6f4f8888940fe80b5cc2521b305a1fafe1c58609ef715a001f301
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/ce/4f/5249960887b1fbe561d9ff265496d170b55a735b76724f10ef19f9e40716/prompt_toolkit-3.0.51-py3-none-any.whl#sha256=52742911fde84e2d423e2f9a4cf1de7d7ac4e51958f648d9540e0fb8db077b07
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/8b/e6/2a47ce2eba1aaf287380a44270da897ada03d118a55c19595ec7b4f0831f/protobuf-3.20.2-py2.py3-none-any.whl#sha256=c9cdf251c582c16fd6a9f5e95836c90828d51b0069ad22f463761d27c6c19019
@@ -213,6 +217,7 @@ environments:
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/3c/ac/12fab74a908d40b63174dc704587febd0729414804bbfd873cabe504ff2d/pyproj-3.7.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl#sha256=8c5dcf24ede53d8abab7d8a77f69ff1936c6a8843ef4fcc574646e4be66e5739
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/49/b3/d8482e8cacc8ea15a356efea13d22ce1c5914a9ee36622ba250523240bf2/pyquaternion-0.9.9-py3-none-any.whl#sha256=e65f6e3f7b1fdf1a9e23f82434334a1ae84f14223eee835190cd2e841f8172ec
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl#sha256=a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
+      - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/1e/18/98a99ad95133c6a6e2005fe89faedf294a748bd5dc803008059409ac9b1e/python_dotenv-1.1.0-py3-none-any.whl#sha256=d7c01d9e2293916c18baf562d95698754b0dbbb5e74d457c45d4f6561fb9d55d
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/08/20/0f2523b9e50a8052bc6a8b732dfc8568abbdc42010aef03a2d750bdab3b2/python_json_logger-3.3.0-py3-none-any.whl#sha256=dd980fae8cffb24c13caf6e158d3d61c0d6d22342f932cb6e9deedab3d35eec7
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/45/58/38b5afbc1a800eeea951b9285d3912613f2603bdf897a4ab0f4bd7f405fc/python_multipart-0.0.20-py3-none-any.whl#sha256=8a62d3a8335e06589fe01f2a3e178cdcc632f3fbe0d492ad9ee0ec35aab1f104
       - pypi: git+https://github.com/facebookresearch/pytorch3d.git?rev=stable#75ebeeaea0908c5527e7b1e305fbc7681382db47
@@ -259,10 +264,11 @@ environments:
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/32/d5/f9a850d79b0851d1d4ef6456097579a9005b31fea68726a4ae5f2d82ddd9/threadpoolctl-3.6.0-py3-none-any.whl#sha256=43a0b8fd5a2928500110039e43a5eed8480b918967083ea48dc3ab9f13c4a7fb
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/6e/be/10d23cfd4078fbec6aba768a357eff9e70c0b6d2a07398425985c524ad2a/tifffile-2025.3.30-py3-none-any.whl#sha256=0ed6eee7b66771db2d1bfc42262a51b01887505d35539daef118f4ff8c0f629c
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/6c/d0/179abca8b984b3deefd996f362b612c39da73b60f685921e6cd58b6125b4/timm-1.0.15-py3-none-any.whl#sha256=5a3dc460c24e322ecc7fd1f3e3eb112423ddee320cb059cc1956fbc9731748ef
-      - pypi: git+https://github.com/NVlabs/tiny-cuda-nn?subdirectory=bindings%2Ftorch&rev=master#075158a70b87dba8729188a9cadc9411cfa4b71d
+      - pypi: git+https://github.com/NVlabs/tiny-cuda-nn?subdirectory=bindings%2Ftorch&rev=master#48d6989c95def307a40baf176b2d6015dada19f9
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/e6/34/ebdc18bae6aa14fbee1a08b63c015c72b64868ff7dae68808ab500c492e2/tinycss2-1.4.0-py3-none-any.whl#sha256=3a49cf47b7675da0b15d0c6e1df8df4ebd96e9394bb905a5775adb0d884c5289
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/f9/b6/a447b5e4ec71e13871be01ba81f5dfc9d0af7e473da256ff46bc0e24026f/tomlkit-0.13.2-py3-none-any.whl#sha256=7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde
       - pypi: https://download.pytorch.org/whl/cu118/torch-2.4.1%2Bcu118-cp311-cp311-linux_x86_64.whl#sha256=c7fbf1e214af65ccc0e54d265140b2d09486f977b966fcde218b25068bd54551
+      - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/9f/2c/e24c7e261eaa00fc911c39a5e30f77efbace480aae2548db9ceaef410945/torch_fidelity-0.3.0-py3-none-any.whl#sha256=d01284825595feb7dc3eae3dc9a0d8ced02be764813a3483f109bc142b52a1d3
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/cc/f3/a950329a25ee1af14c05065ce6c1751f031de9e6d5eebb0620ce3d0938ed/torchaudio-2.4.1-cp311-cp311-manylinux1_x86_64.whl#sha256=95a0968569f7f4455bfd242bfcd489ec47ad37d2ba0f3d9f738cd1128a5f775c
       - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/e0/ee/4d0a7213a6f412afb3483031009a3b970dd7bed3be24de95ab04fba1c05a/torchmetrics-1.7.1-py3-none-any.whl#sha256=9a4c45edbd0a1844cc1540c9e71bfbe0ee783a2ed997344d947fefecac90dbb9
       - pypi: https://download.pytorch.org/whl/cu118/torchvision-0.19.1%2Bcu118-cp311-cp311-linux_x86_64.whl#sha256=35d9a78ca449fbe71cc48b456e15e0997873b3f98635845126c66f50c38ee6d8
@@ -1213,7 +1219,7 @@ packages:
   requires_dist:
   - grpcio-tools>=1.71.0 ; extra == 'protobuf'
   requires_python: '>=3.9'
-- pypi: git+https://github.com/hyzhou404/HUGSIM_splat.git?rev=main#c116c612efc97cb35cf7611c96423a28392c0508
+- pypi: git+https://github.com/hyzhou404/HUGSIM_splat.git?rev=main#88f2a40c4e2f6bafde2beeaba6c43bbb0ccb1f5f
   name: gsplat
   version: 1.2.0
   requires_dist:
@@ -1300,6 +1306,13 @@ packages:
   requires_dist:
   - numpy>=1.19.3
   requires_python: '>=3.9'
+- pypi: https://mirrors.zju.edu.cn/pypi/web/packages/9f/a7/693dc9f34f979e30a378125e2150a0b2d8d166e6d83ce3950eeb81e560aa/hf_xet-1.1.2-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl#sha256=6b29ac84298147fe9164cc55ad994ba47399f90b5d045b0b803b99cf5f06d8ec
+  name: hf-xet
+  version: 1.1.2
+  sha256: 6b29ac84298147fe9164cc55ad994ba47399f90b5d045b0b803b99cf5f06d8ec
+  requires_dist:
+  - pytest ; extra == 'tests'
+  requires_python: '>=3.8'
 - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/18/8d/f052b1e336bb2c1fc7ed1aaed898aa570c0b61a09707b108979d9fc6e308/httpcore-1.0.8-py3-none-any.whl#sha256=5254cf149bcb5f75e9d1b2b9f729ea4a4b883d1ad7379fc632b727cec23674be
   name: httpcore
   version: 1.0.8
@@ -1330,10 +1343,10 @@ packages:
   - socksio==1.* ; extra == 'socks'
   - zstandard>=0.18.0 ; extra == 'zstd'
   requires_python: '>=3.8'
-- pypi: https://mirrors.zju.edu.cn/pypi/web/packages/93/27/1fb384a841e9661faad1c31cbfa62864f59632e876df5d795234da51c395/huggingface_hub-0.30.2-py3-none-any.whl#sha256=68ff05969927058cfa41df4f2155d4bb48f5f54f719dd0390103eefa9b191e28
+- pypi: https://mirrors.zju.edu.cn/pypi/web/packages/3a/60/90aae898b0a9f3cd65f50718c33b1f1dbfb1527d10db754e99e14e2b0a1d/huggingface_hub-0.32.0-py3-none-any.whl#sha256=e56e94109649ce6ebdb59b4e393ee3543ec0eca2eab4f41b269e1d885c88d08c
   name: huggingface-hub
-  version: 0.30.2
-  sha256: 68ff05969927058cfa41df4f2155d4bb48f5f54f719dd0390103eefa9b191e28
+  version: 0.32.0
+  sha256: e56e94109649ce6ebdb59b4e393ee3543ec0eca2eab4f41b269e1d885c88d08c
   requires_dist:
   - filelock
   - fsspec>=2023.5.0
@@ -1342,8 +1355,13 @@ packages:
   - requests
   - tqdm>=4.42.1
   - typing-extensions>=3.7.4.3
+  - hf-xet>=1.1.2,<2.0.0 ; platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64'
   - inquirerpy==0.3.4 ; extra == 'all'
   - aiohttp ; extra == 'all'
+  - authlib>=1.3.2 ; extra == 'all'
+  - fastapi ; extra == 'all'
+  - httpx ; extra == 'all'
+  - itsdangerous ; extra == 'all'
   - jedi ; extra == 'all'
   - jinja2 ; extra == 'all'
   - pytest>=8.1.1,<8.2.2 ; extra == 'all'
@@ -1359,9 +1377,7 @@ packages:
   - pillow ; extra == 'all'
   - gradio>=4.0.0 ; extra == 'all'
   - numpy ; extra == 'all'
-  - fastapi ; extra == 'all'
   - ruff>=0.9.0 ; extra == 'all'
-  - mypy==1.5.1 ; extra == 'all'
   - libcst==1.4.0 ; extra == 'all'
   - typing-extensions>=4.8.0 ; extra == 'all'
   - types-pyyaml ; extra == 'all'
@@ -1370,9 +1386,15 @@ packages:
   - types-toml ; extra == 'all'
   - types-tqdm ; extra == 'all'
   - types-urllib3 ; extra == 'all'
+  - mypy>=1.14.1,<1.15.0 ; python_full_version == '3.8.*' and extra == 'all'
+  - mypy==1.15.0 ; python_full_version >= '3.9' and extra == 'all'
   - inquirerpy==0.3.4 ; extra == 'cli'
   - inquirerpy==0.3.4 ; extra == 'dev'
   - aiohttp ; extra == 'dev'
+  - authlib>=1.3.2 ; extra == 'dev'
+  - fastapi ; extra == 'dev'
+  - httpx ; extra == 'dev'
+  - itsdangerous ; extra == 'dev'
   - jedi ; extra == 'dev'
   - jinja2 ; extra == 'dev'
   - pytest>=8.1.1,<8.2.2 ; extra == 'dev'
@@ -1388,9 +1410,7 @@ packages:
   - pillow ; extra == 'dev'
   - gradio>=4.0.0 ; extra == 'dev'
   - numpy ; extra == 'dev'
-  - fastapi ; extra == 'dev'
   - ruff>=0.9.0 ; extra == 'dev'
-  - mypy==1.5.1 ; extra == 'dev'
   - libcst==1.4.0 ; extra == 'dev'
   - typing-extensions>=4.8.0 ; extra == 'dev'
   - types-pyyaml ; extra == 'dev'
@@ -1399,15 +1419,25 @@ packages:
   - types-toml ; extra == 'dev'
   - types-tqdm ; extra == 'dev'
   - types-urllib3 ; extra == 'dev'
+  - mypy>=1.14.1,<1.15.0 ; python_full_version == '3.8.*' and extra == 'dev'
+  - mypy==1.15.0 ; python_full_version >= '3.9' and extra == 'dev'
   - toml ; extra == 'fastai'
   - fastai>=2.4 ; extra == 'fastai'
   - fastcore>=1.3.27 ; extra == 'fastai'
   - hf-transfer>=0.1.4 ; extra == 'hf-transfer'
-  - hf-xet>=0.1.4 ; extra == 'hf-xet'
+  - hf-xet>=1.1.2,<2.0.0 ; extra == 'hf-xet'
   - aiohttp ; extra == 'inference'
+  - mcp>=1.8.0 ; extra == 'mcp'
+  - typer ; extra == 'mcp'
+  - aiohttp ; extra == 'mcp'
+  - authlib>=1.3.2 ; extra == 'oauth'
+  - fastapi ; extra == 'oauth'
+  - httpx ; extra == 'oauth'
+  - itsdangerous ; extra == 'oauth'
   - ruff>=0.9.0 ; extra == 'quality'
-  - mypy==1.5.1 ; extra == 'quality'
   - libcst==1.4.0 ; extra == 'quality'
+  - mypy>=1.14.1,<1.15.0 ; python_full_version == '3.8.*' and extra == 'quality'
+  - mypy==1.15.0 ; python_full_version >= '3.9' and extra == 'quality'
   - tensorflow ; extra == 'tensorflow'
   - pydot ; extra == 'tensorflow'
   - graphviz ; extra == 'tensorflow'
@@ -1415,6 +1445,10 @@ packages:
   - keras<3.0 ; extra == 'tensorflow-testing'
   - inquirerpy==0.3.4 ; extra == 'testing'
   - aiohttp ; extra == 'testing'
+  - authlib>=1.3.2 ; extra == 'testing'
+  - fastapi ; extra == 'testing'
+  - httpx ; extra == 'testing'
+  - itsdangerous ; extra == 'testing'
   - jedi ; extra == 'testing'
   - jinja2 ; extra == 'testing'
   - pytest>=8.1.1,<8.2.2 ; extra == 'testing'
@@ -1430,7 +1464,6 @@ packages:
   - pillow ; extra == 'testing'
   - gradio>=4.0.0 ; extra == 'testing'
   - numpy ; extra == 'testing'
-  - fastapi ; extra == 'testing'
   - torch ; extra == 'torch'
   - safetensors[torch] ; extra == 'torch'
   - typing-extensions>=4.8.0 ; extra == 'typing'
@@ -1521,6 +1554,11 @@ packages:
   - pytest-cov ; extra == 'test'
   - fsspec[github] ; extra == 'test'
   - tifffile ; extra == 'tifffile'
+  requires_python: '>=3.9'
+- pypi: https://mirrors.zju.edu.cn/pypi/web/packages/a0/2d/43c8522a2038e9d0e7dbdf3a61195ecc31ca576fb1527a528c877e87d973/imageio_ffmpeg-0.6.0-py3-none-manylinux2014_x86_64.whl#sha256=c7e46fcec401dd990405049d2e2f475e2b397779df2519b544b8aab515195282
+  name: imageio-ffmpeg
+  version: 0.6.0
+  sha256: c7e46fcec401dd990405049d2e2f475e2b397779df2519b544b8aab515195282
   requires_python: '>=3.9'
 - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/79/9d/0fb148dc4d6fa4a7dd1d8378168d9b4cd8d4560a6fbf6f0121c5fc34eb68/importlib_metadata-8.6.1-py3-none-any.whl#sha256=02a89390c1e15fdfdc0d7c6b25cb3e62650d0494005c97d6f148bf5b9787525e
   name: importlib-metadata
@@ -2122,7 +2160,7 @@ packages:
   version: 3.0.14
   sha256: 54c33e3306b7fca139d165d6190dc6c0627aafa5d14adfc974a4e9a3d26cb703
   requires_python: '>=3.7'
-- pypi: git+https://github.com/autonomousvision/kitti360Scripts.git?rev=master#d4d4885102f72ea8d96c9e72e2ff03a8834353a4
+- pypi: git+https://github.com/autonomousvision/kitti360Scripts.git?rev=master#40ee015de8277b2d907d32a30cdbd97072c7d7c3
   name: kitti360scripts
   version: 1.0.0
   requires_dist:
@@ -2462,6 +2500,33 @@ packages:
   requires_dist:
   - typing-extensions ; python_full_version < '3.11'
   requires_python: '>=3.8'
+- pypi: https://mirrors.zju.edu.cn/pypi/web/packages/9a/73/7d3b2010baa0b5eb1e4dfa9e4385e89b6716be76f2fa21a6c0fe34b68e5a/moviepy-2.2.1-py3-none-any.whl#sha256=6b56803fec2ac54b557404126ac1160e65448e03798fa282bd23e8fab3795060
+  name: moviepy
+  version: 2.2.1
+  sha256: 6b56803fec2ac54b557404126ac1160e65448e03798fa282bd23e8fab3795060
+  requires_dist:
+  - decorator>=4.0.2,<6.0
+  - imageio>=2.5,<3.0
+  - imageio-ffmpeg>=0.2.0
+  - numpy>=1.25.0
+  - proglog<=1.0.0
+  - python-dotenv>=0.10
+  - pillow>=9.2.0,<12.0
+  - numpydoc<2.0 ; extra == 'doc'
+  - sphinx==6.* ; extra == 'doc'
+  - pydata-sphinx-theme==0.13 ; extra == 'doc'
+  - sphinx-design ; extra == 'doc'
+  - coveralls>=3.0,<4.0 ; extra == 'test'
+  - pytest-cov>=2.5.1,<3.0 ; extra == 'test'
+  - pytest>=3.0.0,<7.0.0 ; extra == 'test'
+  - black>=23.7.0 ; extra == 'lint'
+  - flake8>=6.0.0 ; extra == 'lint'
+  - flake8-absolute-import>=1.0 ; extra == 'lint'
+  - flake8-docstrings>=1.7.0 ; extra == 'lint'
+  - flake8-rst-docstrings>=0.3 ; extra == 'lint'
+  - flake8-implicit-str-concat==0.4.0 ; extra == 'lint'
+  - isort>=5.12 ; extra == 'lint'
+  - pre-commit>=3.3 ; extra == 'lint'
 - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl#sha256=a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c
   name: mpmath
   version: 1.3.0
@@ -3103,6 +3168,12 @@ packages:
   - pytest-rerunfailures>=15.0 ; extra == 'tests'
   - redis ; extra == 'redis'
   requires_python: '>=3.9'
+- pypi: https://mirrors.zju.edu.cn/pypi/web/packages/c1/1b/f7ea6cde25621cd9236541c66ff018f4268012a534ec31032bcb187dc5e7/proglog-0.1.12-py3-none-any.whl#sha256=ccaafce51e80a81c65dc907a460c07ccb8ec1f78dc660cfd8f9ec3a22f01b84c
+  name: proglog
+  version: 0.1.12
+  sha256: ccaafce51e80a81c65dc907a460c07ccb8ec1f78dc660cfd8f9ec3a22f01b84c
+  requires_dist:
+  - tqdm
 - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/ff/c2/ab7d37426c179ceb9aeb109a85cda8948bb269b7561a0be870cc656eefe4/prometheus_client-0.21.1-py3-none-any.whl#sha256=594b45c410d6f4f8888940fe80b5cc2521b305a1fafe1c58609ef715a001f301
   name: prometheus-client
   version: 0.21.1
@@ -3293,6 +3364,13 @@ packages:
   requires_dist:
   - six>=1.5
   requires_python: '>=2.7,!=3.0.*,!=3.1.*,!=3.2.*'
+- pypi: https://mirrors.zju.edu.cn/pypi/web/packages/1e/18/98a99ad95133c6a6e2005fe89faedf294a748bd5dc803008059409ac9b1e/python_dotenv-1.1.0-py3-none-any.whl#sha256=d7c01d9e2293916c18baf562d95698754b0dbbb5e74d457c45d4f6561fb9d55d
+  name: python-dotenv
+  version: 1.1.0
+  sha256: d7c01d9e2293916c18baf562d95698754b0dbbb5e74d457c45d4f6561fb9d55d
+  requires_dist:
+  - click>=5.0 ; extra == 'cli'
+  requires_python: '>=3.9'
 - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/08/20/0f2523b9e50a8052bc6a8b732dfc8568abbdc42010aef03a2d750bdab3b2/python_json_logger-3.3.0-py3-none-any.whl#sha256=dd980fae8cffb24c13caf6e158d3d61c0d6d22342f932cb6e9deedab3d35eec7
   name: python-json-logger
   version: 3.3.0
@@ -4004,7 +4082,7 @@ packages:
   - pytest ; extra == 'test'
   - ruff ; extra == 'test'
   requires_python: '>=3.8'
-- pypi: git+https://github.com/NVlabs/tiny-cuda-nn?subdirectory=bindings%2Ftorch&rev=master#075158a70b87dba8729188a9cadc9411cfa4b71d
+- pypi: git+https://github.com/NVlabs/tiny-cuda-nn?subdirectory=bindings%2Ftorch&rev=master#48d6989c95def307a40baf176b2d6015dada19f9
   name: tinycudann
   version: '1.7'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/tk-8.6.13-noxft_h4845f30_101.conda
@@ -4049,6 +4127,18 @@ packages:
   - opt-einsum>=3.3 ; extra == 'opt-einsum'
   - optree>=0.11.0 ; extra == 'optree'
   requires_python: '>=3.8.0'
+- pypi: https://mirrors.zju.edu.cn/pypi/web/packages/9f/2c/e24c7e261eaa00fc911c39a5e30f77efbace480aae2548db9ceaef410945/torch_fidelity-0.3.0-py3-none-any.whl#sha256=d01284825595feb7dc3eae3dc9a0d8ced02be764813a3483f109bc142b52a1d3
+  name: torch-fidelity
+  version: 0.3.0
+  sha256: d01284825595feb7dc3eae3dc9a0d8ced02be764813a3483f109bc142b52a1d3
+  requires_dist:
+  - numpy
+  - pillow
+  - scipy
+  - torch
+  - torchvision
+  - tqdm
+  requires_python: '>=3.6'
 - pypi: https://mirrors.zju.edu.cn/pypi/web/packages/cc/f3/a950329a25ee1af14c05065ce6c1751f031de9e6d5eebb0620ce3d0938ed/torchaudio-2.4.1-cp311-cp311-manylinux1_x86_64.whl#sha256=95a0968569f7f4455bfd242bfcd489ec47ad37d2ba0f3d9f738cd1128a5f775c
   name: torchaudio
   version: 2.4.1

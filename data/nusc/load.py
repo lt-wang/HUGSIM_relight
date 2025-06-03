@@ -131,8 +131,11 @@ if __name__ == "__main__":
     ##########################################################################
     
     samples = find_all_sample(nusc, first_sample)[args.start:args.end]
+    
+    # get camera pose
     fff_sample_data = nusc.get("sample_data", samples[0]['data']["CAM_FRONT"])
-    inv_pose = np.linalg.inv(get_sample_pose(nusc, fff_sample_data)[0])
+    origin_cam_pose, _ = get_sample_pose(nusc, fff_sample_data)
+    inv_pose = np.linalg.inv(origin_cam_pose)
     meta_data['inv_pose'] = inv_pose.tolist()
     
     shutil.rmtree(os.path.join(outdir, 'images'), ignore_errors=True)
@@ -144,7 +147,7 @@ if __name__ == "__main__":
     tracks = defaultdict(list)
     for sample in samples:
         for box_token in sample['anns']:
-            instance_token, pose, _ = get_box(nusc, box_token, inv_pose)
+            instance_token, pose, _ = get_box(nusc, box_token, origin_cam_pose)
             tracks[instance_token].append(pose)
     dynamic_instance = set()
     for instance_token, traj_list in tracks.items():
@@ -159,7 +162,7 @@ if __name__ == "__main__":
 
         dynamics = {}
         for box_token in sample["anns"]:
-            instance_token, pose, lhw = get_box(nusc, box_token, inv_pose)
+            instance_token, pose, lhw = get_box(nusc, box_token, origin_cam_pose)
             if instance_token not in dynamic_instance:
                 continue
             dynamics[instance_token] = pose.tolist()

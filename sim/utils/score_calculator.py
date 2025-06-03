@@ -59,6 +59,61 @@ def bg_collision_det(points, box):
         (torch.dot(O, OC) < POC) & (POC < torch.dot(C, OC))
     return True if torch.sum(mask) > 100 else False
 
+def calculate_trajectory_kinematics(traj, timestep):
+    """
+    Calculate kinematic parameters for a given trajectory.
+
+    :param traj: List of tuples (x, y, yaw) for each point in the trajectory
+    :param timestep: Time interval between each point in the trajectory
+    :return: Dictionary containing lists of calculated parameters
+    """
+    # Convert trajectory to numpy array for easier calculations
+    x, y, yaw = zip(*traj)
+    x, y, yaw = np.array(x), np.array(y), np.array(yaw)
+
+    # Calculate velocities
+    dx = np.diff(x) / timestep
+    dy = np.diff(y) / timestep
+
+    # Calculate yaw rate
+    dyaw = np.diff(yaw)
+    dyaw = np.where(dyaw > np.pi, dyaw - 2*np.pi, dyaw)
+    dyaw = np.where(dyaw < -np.pi, dyaw + 2*np.pi, dyaw)
+    dyaw = dyaw / timestep
+    ddyaw = np.diff(dyaw) / timestep
+
+    # Calculate speed
+    speed = np.sqrt(dx**2 + dy**2)
+
+    # Calculate accelerations
+    accel = np.diff(speed) / timestep
+    jerk = np.diff(accel) / timestep
+
+    # Calculate yaw rate (already calculated as dyaw)
+    yaw_rate = dyaw
+    # Calculate yaw acceleration
+    yaw_accel = ddyaw
+
+    lon_accel = accel
+    lat_accel = np.zeros_like(lon_accel)
+    lon_jerk = jerk
+
+    # Pad arrays to match the original trajectory length
+    yaw_rate = np.pad(yaw_rate, (0, 1), 'edge')
+    yaw_accel = np.pad(yaw_accel, (0, 2), 'edge')
+    lon_accel = np.pad(lon_accel, (0, 2), 'edge')
+    lat_accel = np.pad(lat_accel, (0, 2), 'edge')
+    lon_jerk = np.pad(lon_jerk, (0, 3), 'edge')
+
+    return {
+        'speed': speed,
+        'yaw_rate': yaw_rate,
+        'yaw_accel': yaw_accel,
+        'lon_accel': lon_accel,
+        'lat_accel': lat_accel,
+        'lon_jerk': lon_jerk,
+    }
+
 
 class ScoreCalculator:
     def __init__(self, data):
@@ -182,6 +237,31 @@ class ScoreCalculator:
             elif drivable_ratio < 0.5:
                 dac = 0.5
         return dac
+    
+    def _single_frame_drivable_area_compliance(self, ground, ego, vehicle_width, vehicle_length):
+        m, n = 2, 2
+        dac = 1.0
+        x, y, _, _, _, _, yaw = ego
+        cnt = 0
+        c, s = np.cos(yaw), np.sin(yaw)
+        R = np.array([[c, -s], [s, c]])
+        ground_in_ego = (np.linalg.inv(R) @ (ground + np.array([-x, -y])).T).T
+        x_bins = np.linspace(-vehicle_length/2, vehicle_length/2, m+1)
+        y_bins = np.linspace(-vehicle_width/2, vehicle_width/2, n+1)
+        for xi in range(m):
+            for yi in range(n):
+                min_x, max_x = x_bins[xi], x_bins[xi+1]
+                min_y, max_y = y_bins[yi], y_bins[yi+1]
+                ground_mask = (min_x < ground_in_ego[:, 0]) & (ground_in_ego[:, 0] < max_x) & \
+                                (min_y < ground_in_ego[:, 1]) & (ground_in_ego[:, 1] < max_y)
+                if ground_mask.sum() > 0:
+                    cnt += 1
+        drivable_ratio = cnt / (m*n)
+        if drivable_ratio < 0.3:
+            return 0
+        elif drivable_ratio < 0.5:
+            dac = 0.5
+        return dac
 
     def _calculate_progress(self, planned_traj, ref_taj):
         def calculate_curve_length(points):
@@ -225,61 +305,6 @@ class ScoreCalculator:
         :return: 1.0 if all parameters are within boundaries, 0.0 otherwise
         """
 
-        def calculate_trajectory_kinematics(traj, timestep):
-            """
-            Calculate kinematic parameters for a given trajectory.
-
-            :param traj: List of tuples (x, y, yaw) for each point in the trajectory
-            :param timestep: Time interval between each point in the trajectory
-            :return: Dictionary containing lists of calculated parameters
-            """
-            # Convert trajectory to numpy array for easier calculations
-            x, y, yaw = zip(*traj)
-            x, y, yaw = np.array(x), np.array(y), np.array(yaw)
-
-            # Calculate velocities
-            dx = np.diff(x) / timestep
-            dy = np.diff(y) / timestep
-
-            # Calculate yaw rate
-            dyaw = np.diff(yaw)
-            dyaw = np.where(dyaw > np.pi, dyaw - 2*np.pi, dyaw)
-            dyaw = np.where(dyaw < -np.pi, dyaw + 2*np.pi, dyaw)
-            dyaw = dyaw / timestep
-            ddyaw = np.diff(dyaw) / timestep
-
-            # Calculate speed
-            speed = np.sqrt(dx**2 + dy**2)
-
-            # Calculate accelerations
-            accel = np.diff(speed) / timestep
-            jerk = np.diff(accel) / timestep
-
-            # Calculate yaw rate (already calculated as dyaw)
-            yaw_rate = dyaw
-            # Calculate yaw acceleration
-            yaw_accel = ddyaw
-
-            lon_accel = accel
-            lat_accel = np.zeros_like(lon_accel)
-            lon_jerk = jerk
-
-            # Pad arrays to match the original trajectory length
-            yaw_rate = np.pad(yaw_rate, (0, 1), 'edge')
-            yaw_accel = np.pad(yaw_accel, (0, 2), 'edge')
-            lon_accel = np.pad(lon_accel, (0, 2), 'edge')
-            lat_accel = np.pad(lat_accel, (0, 2), 'edge')
-            lon_jerk = np.pad(lon_jerk, (0, 3), 'edge')
-
-            return {
-                'speed': speed,
-                'yaw_rate': yaw_rate,
-                'yaw_accel': yaw_accel,
-                'lon_accel': lon_accel,
-                'lat_accel': lat_accel,
-                'lon_jerk': lon_jerk,
-            }
-
         # Calculate kinematic parameters
         if len(traj) < 4:
             return 1.0
@@ -307,6 +332,43 @@ class ScoreCalculator:
 
         # Return 1.0 if all checks pass, 0.0 otherwise
         return 1.0 if all(checks) else 0.0
+    
+    def _calculate_actual_comfort(self, traj, timestep):
+        """
+        Check if all kinematic parameters of a trajectory are within specified boundaries.
+
+        :param traj: List of tuples (x, y, yaw) representing the trajectory, in ego's local frame
+        :param timestep: Time interval between trajectory points in seconds
+        :return: 1.0 if all parameters are within boundaries, 0.0 otherwise
+        """
+
+        kinematics = calculate_trajectory_kinematics(traj, timestep)
+
+        # Check each parameter against its boundary
+        checks = [
+            np.all(np.abs(kinematics['lat_accel']) <=
+                   boundaries['max_abs_lat_accel']),
+            np.all(kinematics['lon_accel'] <= boundaries['max_abs_lat_accel']),
+            np.all(kinematics['lon_accel'] >= boundaries['min_lon_accel']),
+            np.all(np.abs(kinematics['lon_jerk']) <=
+                   boundaries['max_abs_lon_jerk']),
+            np.all(np.abs(kinematics['yaw_accel']) <=
+                   boundaries['max_abs_yaw_accel']),
+            np.all(np.abs(kinematics['yaw_rate']) <=
+                   boundaries['max_abs_yaw_rate'])
+        ]
+        
+        lat_accel_check = np.abs(kinematics['lat_accel']) <= boundaries['max_abs_lat_accel']
+        lon_accel_check = (kinematics['lon_accel'] >= boundaries['min_lon_accel']) & (kinematics['lon_accel'] <= boundaries['max_lon_accel'])
+        lon_jerk_check = np.abs(kinematics['lon_jerk']) <= boundaries['max_abs_lon_jerk']
+        yaw_accel_check = np.abs(kinematics['yaw_accel']) <= boundaries['max_abs_yaw_accel']
+        yaw_rate_check = np.abs(kinematics['yaw_rate']) <= boundaries['max_abs_yaw_rate']
+        checks = lat_accel_check & lon_accel_check & lon_jerk_check & yaw_accel_check & yaw_rate_check
+
+        print(f"comfortable: {checks}")
+
+        # Return 1.0 if all checks pass, 0.0 otherwise
+        return checks
 
     def _calculate_no_collision(self, ego_box, planned_traj, obs_lists, scene_xyz):
         ego_x, ego_y, z, ego_w, ego_l, ego_h, ego_yaw = ego_box
@@ -342,6 +404,31 @@ class ScoreCalculator:
                     return 0.0  # Collision detected
         return 1.0
 
+    def _single_frame_no_collision(self, ego_box, obs_list, scene_xyz, timestamp):
+        ego_x, ego_y, z, ego_w, ego_l, ego_h, ego_yaw = ego_box
+        ego_verts_local = ego_verts_canonic * np.array([ego_l, ego_w, ego_h])
+        ego_trans_mat = np.eye(4)
+        ego_trans_mat[:3, :3] = SCR.from_euler('z', ego_yaw).as_matrix()
+        ego_trans_mat[:3, 3] = np.array([ego_x, ego_y, z])
+        ego_verts_global = (ego_trans_mat[:3, :3] @ ego_verts_local.T).T + ego_trans_mat[:3, 3]
+        ego_verts_global = torch.from_numpy(ego_verts_global).float().cuda()
+        bk_collision = bg_collision_det(scene_xyz, ego_verts_global)
+        if bk_collision:
+            print(f"collision with background detected! @ {timestamp}")
+            return 0.0
+        ego_poly = create_rectangle(ego_x, ego_y, ego_w, ego_l, ego_yaw)
+        for obs in obs_list:
+            # obs = (x,y,z,w,l,h,yaw)
+            obs_x, obs_y, _, obs_w, obs_l, _, obs_yaw = obs
+            obs_poly = create_rectangle(
+                obs_x, obs_y, obs_w, obs_l, obs_yaw)
+            if ego_poly.intersects(obs_poly):
+                print(f"collision with obstacle detected! @ {timestamp}")
+                print(
+                    f"ego_poly: {(ego_x, ego_y, ego_yaw,obs_w, obs_l)}, obs_poly: {(obs_x, obs_y, obs_yaw,obs_w, obs_l )}")
+                return 0.0  # Collision detected
+        return 1.0
+
     def _calculate_time_to_collision(self, ego_box, planned_traj, obs_lists, scene_xyz, timestep):
         # breakpoint()
         t_list = [0.5, 1]  # ttc time
@@ -374,8 +461,17 @@ class ScoreCalculator:
         print(f"current exp has {len(self.data['frames'])} frames")
         if len(self.data['frames']) == 0:
             return None
-        # todo: time_step need modify
+
         score_list = {}
+        
+        # ego_traj = []
+        # for frame in self.data['frames']:
+        #     x, y, _, _, _, _, yaw = frame['ego_box']
+        #     ego_traj.append((x, y, yaw))
+        # comfort = self._calculate_actual_comfort(
+        #     ego_traj, 0.25
+        # )
+        
         for i in range(0, len(self.data['frames']), 1):
             frame = self.data['frames'][i]
             if frame['is_key_frame'] == False:
@@ -427,13 +523,22 @@ class ScoreCalculator:
 
             score_nc = self._calculate_no_collision(
                 frame['ego_box'], planned_traj, obs_lists, self.data['scene_xyz'])
-            # score_nc = 0.0 if frame['collision'] else 1.0
             score_dac = self._calculate_drivable_area_compliance(
                 self.data['ground_xy'], planned_traj, ego_w, ego_l)
+            
+            # score_nc = self._single_frame_no_collision(
+            #     frame['ego_box'], obs_lists[0], self.data['scene_xyz'], timestamp)
+            # # score_nc = 0.0 if frame['collision'] else 1.0
+            # score_dac = self._single_frame_drivable_area_compliance(
+            #     self.data['ground_xy'], frame['ego_box'], ego_w, ego_l)
+            
             score_ttc = self._calculate_time_to_collision(
                 frame['ego_box'], planned_traj, obs_lists, self.data['scene_xyz'], frame['planned_traj']['timestep'])
+            
+            # score_c = 1.0 if comfort[i] else 0.0
             score_c = self._calculate_is_comfortable(
                 transformed_traj, frame['planned_traj']['timestep'])
+            
             # score_ep = self._calculate_progress(
             #     planned_traj, ref_traj)
 
@@ -458,7 +563,7 @@ class ScoreCalculator:
         route_completion = max([f['rc'] for f in self.data['frames']])
         route_completion = route_completion if route_completion < 1 else 1.0
         driving_score = mean_score*route_completion
-        return mean_score, route_completion, driving_score, averages
+        return mean_score, route_completion, driving_score, averages, score_list
 
 
 def calculate(data):
@@ -473,46 +578,17 @@ def calculate(data):
         final_score_dict = score[3]
         final_score_dict['rc'] = score[1]
         final_score_dict['hdscore'] = score[2]
+        final_score_dict['details'] = score[-1]
         return final_score_dict
-
-    def multi_threaded_process(data, max_workers=None):
-        all_averages = []
-
-        # Using thread locks for thread-safe append operations
-        lock = threading.Lock()
-
-        def append_result(future):
-            result = future.result()
-            with lock:
-                all_averages.append(result)
-
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            futures = [executor.submit(process_exp_data, exp_data)
-                       for exp_data in data]
-            for future in futures:
-                future.add_done_callback(append_result)
-
-        return all_averages
-
-    all_averages = multi_threaded_process(data)
-
-    collected_values = defaultdict(list)
-    for averages in all_averages:
-        for key, value in averages.items():
-            collected_values[key].append(value)
-
-    # Calculation of mean and standard deviation for each indicator
-    results = {}
-    for key, values in collected_values.items():
-        avg = np.mean(values)
-        # std = np.std(values)
-        results[key] = f"{avg:.4f}"
+    
+    assert len(data) == 1, "only support single experiment now"
+    score_dict = process_exp_data(data[0])
 
     # Output Results
     print("=============================Results=============================")
-    for key, value in results.items():
-        print(f"'{key}': {value}")
-    return results
+    for key in ['nc', 'dac', 'ttc', 'c', 'pdms', 'rc', 'hdscore']:
+        print(f"'{key}': {score_dict[key]}")
+    return score_dict
 
 def parse_data(test_path):
     data_file_name = os.path.join(test_path, "data.pkl")
@@ -538,7 +614,10 @@ def parse_data(test_path):
     return data
 
 
-def hugsim_evaluate(test_data, ground_xyz, scene_xyz):
+def hugsim_evaluate(test_data, ground_xyz, scene_xyz, new_score_weight=None):
+    if new_score_weight is not None:
+        global score_weight
+        score_weight = new_score_weight
     ground_xy = np.stack([ground_xyz[:, 2], -ground_xyz[:, 0]], axis=1) # in imu coordinates
     scene_xyz = np.stack([scene_xyz[:, 2], -scene_xyz[:, 0], -scene_xyz[:, 1]], axis=1) 
     test_data[0]['ground_xy'] = ground_xy

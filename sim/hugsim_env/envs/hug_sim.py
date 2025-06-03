@@ -85,8 +85,6 @@ class HUGSimEnv(gymnasium.Env):
         scene_pcd = o3d.geometry.PointCloud()
         scene_pcd.points = o3d.utility.Vector3dVector(scene_xyz.astype(float))
         o3d.io.write_point_cloud(os.path.join(output, 'scene.ply'), scene_pcd)
-            
-        unicycles = {}
 
         if cfg.scenario.load_HD_map:
             self.planner.update_agent_route()
@@ -144,7 +142,7 @@ class HUGSimEnv(gymnasium.Env):
             "pc": self.gaussians,
             "bg_color": torch.tensor(bg_color, dtype=torch.float32, device="cuda"),
             "dynamic_gaussians": dynamic_gaussians,
-            "unicycles": unicycles
+            "unicycles": {} # dummy input, unicycle planner is used for unicycle models
         }
         gaussians = self.gaussians
         semantic_idx = torch.argmax(gaussians.get_3D_features, dim=-1, keepdim=True)

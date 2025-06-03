@@ -79,8 +79,8 @@ if __name__ == "__main__":
             smts = np.load(smts_path).reshape(-1)
             smt_mask = smts > 1
             
-        # mask = dynamic_mask & smt_mask
-        mask = smt_mask
+        mask = dynamic_mask & smt_mask
+        # mask = smt_mask
         local_points = local_points[mask]
         local_colors = local_colors[mask]
 

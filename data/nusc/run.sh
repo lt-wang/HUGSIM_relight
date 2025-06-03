@@ -3,12 +3,12 @@
 export PYTHONPATH="${PWD}:$PYTHONPATH"
 
 cuda=4
-seq='scene-0655'
+seq='scene-0052'
 data='/nas/datasets/nuScenes/raw/Trainval'
 version='interp_12Hz_trainval'
 start=0
 end=180
-out=/data3/hyzhou/data/HUGSIM/release/nusc/${seq}
+out=/data1/hyzhou/data/HUGSIM/release/nusc/${seq}
 
 export CUDA_VISIBLE_DEVICES=$cuda
 
@@ -36,6 +36,7 @@ colmap model_converter \
         --output_type PLY
 
 python colmap/update_campose.py --datapath ${out}
+python utils/vis_bbox_2d.py --out ${out}
 
 python utils/estimate_depth.py --out ${out}
 python utils/merge_depth_wo_ground.py --out ${out} --total 200000

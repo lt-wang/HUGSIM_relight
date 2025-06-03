@@ -8,6 +8,8 @@ __pycache__
 output
 build
 shell
+private
+apex
 # pixi environments
 .pixi
 *.egg-info

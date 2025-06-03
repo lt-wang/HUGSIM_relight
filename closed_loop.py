@@ -14,6 +14,17 @@ from omegaconf import OmegaConf
 import open3d as o3d
 from sim.utils.score_calculator import hugsim_evaluate
 import numpy as np
+from moviepy import ImageSequenceClip
+
+def to_video(observations, output_path):
+    frames = []
+    for obs in observations:
+        row1 = np.concatenate([obs['CAM_FRONT_LEFT'], obs['CAM_FRONT'], obs['CAM_FRONT_RIGHT']], axis=1)
+        row2 = np.concatenate([obs['CAM_BACK_RIGHT'], obs['CAM_BACK'], obs['CAM_BACK_LEFT']], axis=1)
+        frame = np.concatenate([row1, row2], axis=0)
+        frames.append(frame)
+    clip = ImageSequenceClip(frames, fps=4)
+    clip.write_videofile(output_path)
 
 
 def create_gym_env(cfg, output):
@@ -39,6 +50,8 @@ def create_gym_env(cfg, output):
 
         if obs is None or info is None:
             obs, info = env.reset()
+        observations_save.append(obs['rgb'])
+        infos_save.append(info)
 
         print('ego pose', info['ego_pos'])
 
@@ -56,8 +69,6 @@ def create_gym_env(cfg, output):
             done = terminated or truncated or cnt > 400
 
         else:  # AD Side Crushed
-            observations_save.append(obs)
-            infos_save.append(info)
             done = True
 
         imu_plan_traj = plan_traj[:, [1, 0]]
@@ -71,7 +82,7 @@ def create_gym_env(cfg, output):
             'obj_names': ['car' for _ in info['obj_boxes']],
             'planned_traj': {
                 'traj': global_traj,
-                'timestep': 0.5
+                'timestep': 0.25
             },
             'collision': info['collision'],
             'rc': info['rc']
@@ -82,6 +93,10 @@ def create_gym_env(cfg, output):
 
     with open(os.path.join(output, 'data.pkl'), 'wb') as wf:
         pickle.dump([save_data], wf)
+        
+    to_video(observations_save, os.path.join(output, 'video.mp4'))
+    with open(os.path.join(output, 'infos.pkl'), 'wb') as wf:
+        pickle.dump(infos_save, wf)
     
     ground_xyz = np.asarray(o3d.io.read_point_cloud(os.path.join(output, 'ground.ply')).points)
     scene_xyz = np.asarray(o3d.io.read_point_cloud(os.path.join(output, 'scene.ply')).points)

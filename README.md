@@ -41,6 +41,7 @@ As the repository depends on some packages that can only be installed from sourc
 
 1. Comment the packages below `# install from source code` in `pixi.toml`, then run `pixi install` to install the packages from pypi.
 2. Uncomment the packages in the previous step, then run `pixi install` to install these packages from source code.
+3. Install apex (required by InverseForm) by running `pixi run install-apex`
 
 Change into the **pixi environment** by using the command `pixi shell`.
 

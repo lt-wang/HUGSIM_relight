@@ -3,6 +3,7 @@ import pyquaternion
 import os
 import cv2
 import torch
+import roma
 
 AVAILABLE_CAMERAS = (
     "CAM_FRONT",
@@ -185,20 +186,19 @@ def traj_dict_to_list(traj):
         traj_out.append(traj_dict)
     return traj_out
 
-def get_box(nusc, box_token, inv_pose, c2w=None, updated_c2w=None, only_vehicle=False):
+# def get_box(nusc, box_token, origin_lidar_pose, inv_pose, c2w=None, updated_c2w=None, only_vehicle=False):
+def get_box(nusc, box_token, origin_cam_pose):
+    inv_pose = np.linalg.inv(origin_cam_pose)
     box = nusc.get_box(box_token)
     instance_token = nusc.get("sample_annotation", box.token)["instance_token"]
-    if only_vehicle and 'vehicle' not in box.name:
-        return None, None, None
     pose = np.eye(4)
-    pose[:3, :3] = box.orientation.rotation_matrix
-    pose[:3, 3] = np.array(box.center)
+    pose[:3, :3] = np.linalg.inv(origin_cam_pose[:3, :3]) @ box.orientation.rotation_matrix
+    yaw = roma.rotmat_to_euler('xyz', torch.from_numpy(pose[:3, :3]))[1]
+    pose[:3, :3] = roma.euler_to_rotmat('y', [yaw]).numpy()
+    
+    center = inv_pose[:3, :3] @ box.center + inv_pose[:3, 3]
+    pose[:3, 3] = center
 
-    if c2w is None:
-        pose = inv_pose @ pose @ WLH_TO_LWH
-        lhw = np.array(box.wlh)
-    else:
-        pose = updated_c2w @ np.linalg.inv(c2w) @ inv_pose @ pose @ WLH_TO_LWH
-        lhw = np.array(box.wlh)
-
+    lhw = np.array(box.wlh)[[1,2,0]]
+    
     return instance_token, pose, lhw
