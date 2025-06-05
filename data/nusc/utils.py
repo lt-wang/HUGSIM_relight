@@ -31,6 +31,15 @@ WLH_TO_LWH2 = np.array(
     ]
 )
 
+rot_align = np.array(
+    [
+        [0, 0.0, 1.0],
+        [1.0, 0, 0],
+        [0, 1.0, 0.0],
+    ]
+)
+
+
 ALLOWED_RIGID_CLASSES = (
     "vehicle.car",
     "vehicle.bicycle",
@@ -191,14 +200,12 @@ def get_box(nusc, box_token, origin_cam_pose):
     inv_pose = np.linalg.inv(origin_cam_pose)
     box = nusc.get_box(box_token)
     instance_token = nusc.get("sample_annotation", box.token)["instance_token"]
-    pose = np.eye(4)
-    pose[:3, :3] = np.linalg.inv(origin_cam_pose[:3, :3]) @ box.orientation.rotation_matrix
-    yaw = roma.rotmat_to_euler('xyz', torch.from_numpy(pose[:3, :3]))[1]
-    pose[:3, :3] = roma.euler_to_rotmat('y', [yaw]).numpy()
-    
-    center = inv_pose[:3, :3] @ box.center + inv_pose[:3, 3]
-    pose[:3, 3] = center
+    b2w = np.eye(4)
+    b2w[:3, :3] = box.orientation.rotation_matrix
+    b2w[:3, 3] = np.array(box.center)
+    pose = inv_pose @ b2w @ WLH_TO_LWH
 
-    lhw = np.array(box.wlh)[[1,2,0]]
+    # lhw = np.array(box.wlh)[[1,2,0]]
+    lhw = np.array(box.wlh)
     
     return instance_token, pose, lhw
