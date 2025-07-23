@@ -1,7 +1,7 @@
 [workspace]
 authors = ["hyzhou"]
 channels = ["conda-forge"]
-name = "HUGSIM"
+name = "HUGSIM_relight"
 platforms = ["linux-64"]
 version = "0.1.0"
 
@@ -11,9 +11,10 @@ install-apex = { cmd = "sh -c '[ -d apex ] || git clone https://github.com/NVIDI
 [dependencies]
 python = "==3.11.10"
 setuptools = "==78.1.0"
+pytest = ">=8.4.1,<9"
 
 [pypi-options]
-no-build-isolation = ["gsplat", "pytorch3d", "tinycudann", "simple-knn"]
+no-build-isolation = ["gsplat", "pytorch3d", "tinycudann", "simple-knn","diff_gaussian_rasterization"]
 
 [pypi-dependencies]
 torch = { version = "==2.4.1", index = "https://download.pytorch.org/whl/cu118" }
@@ -61,7 +62,10 @@ huggingface-hub = ">=0.32.0, <0.33"
 # install from source code
 hugsim-env = { path = "./sim", editable = true }
 simple-knn = { path = "./submodules/simple-knn", editable = false }
-gsplat = { git = "https://github.com/hyzhou404/HUGSIM_splat.git", rev = "main" }
+diff_gaussian_rasterization = { path= "./submodules/diff-gaussian-rasterization", editable=true}
+#pbr = { path = "./pbr" , editable =true }
+nvdiffrast = {git = "https://github.com/NVlabs/nvdiffrast",rev = "main"}
+gsplat = { git = "https://github.com/lt-wang/HUGSIM_splat.git", rev = "main" }
 flow-vis-torch = { git = "https://github.com/ChristophReich1996/Optical-Flow-Visualization-PyTorch", rev = "main" }
 unidepth = { git = "https://github.com/hyzhou404/UniDepth.git", rev = "main" }
 trajdata = { git = "https://github.com/hyzhou404/trajdata.git", rev = "main" }
