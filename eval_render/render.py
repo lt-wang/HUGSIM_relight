@@ -96,8 +96,11 @@ def render_set(name:str, scene:Scene, background:torch.Tensor):
             prev_view = views[idx-gap]
             
         render_pkg = render(
-            view, prev_view, scene.gaussians, scene.dynamic_gaussians, scene.unicycles, background, True
+            view, prev_view, scene.gaussians, scene.dynamic_gaussians,{}, background, True
         )
+        # render_pkg = render(
+        #     view, prev_view, scene.gaussians, scene.dynamic_gaussians, scene.unicycles, background, True
+        # )
         rendering = render_pkg['render'].detach().cpu()
         semantic = render_pkg['feats'].detach().cpu()
         semantic = torch.argmax(semantic, dim=0)

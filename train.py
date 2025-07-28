@@ -18,6 +18,10 @@ from torch.utils.data import DataLoader
 from functools import partial
 from tqdm import tqdm as std_tqdm
 from utils.dynamic_utils import create_unicycle_model
+from utils.loss_utils import get_tv_loss
+import cv2
+import numpy as np
+
 tqdm = partial(std_tqdm, dynamic_ncols=True)
 
 results = {'train': {}, 'test': {}}
@@ -95,6 +99,19 @@ def training(cfg):
 
         if iteration % 500 == 0:
             torchvision.utils.save_image(image, os.path.join(scene.model_path, "save_train", f"{iteration}_{viewpoint_cam.image_name}.png"))
+            
+            normal = render_pkg["normal"]
+            depth_normal = render_pkg["depth_normal"]
+            normal_show = (((normal+1.0)*0.5).permute(1,2,0).clamp(0,1)*255).detach().cpu().numpy().astype(np.uint8)
+            depth_normal_show = (((depth_normal+1.0)*0.5).permute(1,2,0).clamp(0,1)*255).detach().cpu().numpy().astype(np.uint8)
+            
+            # 将两个法线图水平组合
+            combined_show = np.hstack((normal_show, depth_normal_show))
+            
+            # 保存组合后的图像
+            debug_dir = os.path.join(cfg.model_path, "normal_debug")
+            os.makedirs(debug_dir, exist_ok=True)
+            cv2.imwrite(os.path.join(debug_dir, f"{iteration:05d}_{viewpoint_cam.image_name}.jpg"), combined_show)
 
         # Loss
         loss = 0
@@ -144,6 +161,19 @@ def training(cfg):
             reg_loss = reg_loss / len(unicycles)
             loss += reg_loss
 
+        # ##normal损失
+        # if iteration > 70000:
+        #     rendered_normal = render_pkg["normal"]
+        #     depth_normal = render_pkg["depth_normal"]
+        #     ## normal-depth consistency loss
+        #     normal_loss_weight = 1.0
+        #     normal_loss = l1_loss(rendered_normal, depth_normal)
+        #     loss += normal_loss_weight * normal_loss
+
+        #     normal_tv_weight = 1.0
+        #     normal_tv_loss = get_tv_loss(gt_image, rendered_normal, pad=1, step=1)
+        #     loss += normal_tv_loss * normal_tv_weight
+
         loss.backward()
 
         iter_end.record()
@@ -158,6 +188,9 @@ def training(cfg):
                     postfix["UniReg"] = f"{reg_loss:.{4}f}"
                 if distort_3d_loss != 0:
                     postfix['dist3d'] = f"{distort_3d_loss:.{4}f}"
+                # if iteration > 7000:
+                #     postfix['normal_loss'] = f"{normal_loss:.{4}f}"
+                #     postfix['normal_tv'] = f"{normal_tv_loss:.{4}f}"
                 progress_bar.set_postfix(postfix)
                 progress_bar.update(10)
             if iteration == cfg.train.iterations:
@@ -249,6 +282,7 @@ def prepare_output(args):
     print("Output folder: {}".format(args.model_path))
     os.makedirs(args.model_path, exist_ok=True)
     os.makedirs(os.path.join(args.model_path, "unicycle"), exist_ok=True)
+    os.makedirs(os.path.join(args.model_path, "save_debug"), exist_ok=True)
 
 def validation(iteration, scene, renderFunc, renderArgs):
     os.makedirs(os.path.join(scene.model_path, "save_test"), exist_ok=True)

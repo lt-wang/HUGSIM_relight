@@ -15,6 +15,7 @@ import shutil
 def load_cameras(args, data_type, ignore_dynamic=False):
     train_cameras = {}
     test_cameras = {}
+    #print("path:",os.path.join(args.source_path, "meta_data.json"))
     if os.path.exists(os.path.join(args.source_path, "meta_data.json")):
         print("Found meta_data.json file, assuming HUGSIM format data set!")
         scene_info = sceneLoadTypeCallbacks['HUGSIM'](args.source_path, data_type, ignore_dynamic)

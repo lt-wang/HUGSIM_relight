@@ -13,12 +13,12 @@
 #include "rasterize_points.h"
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("depth_to_normal", &depthToNormal);
-  m.def("SSAO", &SSAO);
-  m.def("SSR", &SSR);
-  m.def("SSR_BACKWARD", &SSR_BACKWARD);
-  m.def("rasterize_gaussians", &RasterizeGaussiansCUDA);
-  m.def("lite_rasterize_gaussians", &LiteRasterizeGaussiansCUDA);
-  m.def("rasterize_gaussians_backward", &RasterizeGaussiansBackwardCUDA);
-  m.def("mark_visible", &markVisible);
+  m.def("depth_to_normal", &depthToNormal);        // 深度图转法线图
+  m.def("SSAO", &SSAO);                           // 屏幕空间环境光遮蔽
+  m.def("SSR", &SSR);                             // 屏幕空间反射
+  m.def("SSR_BACKWARD", &SSR_BACKWARD);           // SSR反向传播
+  m.def("rasterize_gaussians", &RasterizeGaussiansCUDA);     // 完整高斯渲染
+  m.def("lite_rasterize_gaussians", &LiteRasterizeGaussiansCUDA); // 轻量级渲染
+  m.def("rasterize_gaussians_backward", &RasterizeGaussiansBackwardCUDA); // 反向传播
+  m.def("mark_visible", &markVisible);            // 可见性标记
 }

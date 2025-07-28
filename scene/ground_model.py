@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from utils.general_utils import inverse_sigmoid, get_expon_lr_func, build_rotation
 from torch import nn
+import torch.nn.functional as F
 import os
 from utils.system_utils import mkdir_p
 from plyfile import PlyData, PlyElement
@@ -55,6 +56,9 @@ class GroundModel:
             self._feats3D = nn.Parameter(self._feats3D)
             self._rotation = torch.zeros((self._xyz.shape[0], 4)).cuda()
             self._rotation[:, 0] = 1
+            self._normal = torch.zeros((self._xyz.shape[0], 3), dtype=torch.float, device="cuda")
+            self._normal[..., 1] = -1.0  # Ground normal
+            self._normal = nn.Parameter(self._normal.requires_grad_(True))
             self._opacity = inverse_sigmoid(torch.ones((self._xyz.shape[0], 1)).cuda() * 0.99)
             self._scaling = nn.Parameter(torch.ones((self._xyz.shape[0], 2)).float().cuda() * math.log(self.scale))
 
@@ -70,6 +74,7 @@ class GroundModel:
                 {'params': [self._features_dc], 'lr': 2.5e-3, "name": "f_dc"},
                 {'params': [self._features_rest], 'lr': 2.5e-3 / 20.0, "name": "f_rest"},
                 {'params': [self._feats3D], 'lr': 1e-3, "name": "feats3D"},
+                {'params': [self._normal], 'lr': 1e-3, "name": "normal"}, 
             ]
         else:
             self.param_groups = [
@@ -79,6 +84,7 @@ class GroundModel:
                 {'params': [self._feats3D], 'lr': 1e-2, "name": "feats3D"},
                 {'params': [self._opacity], 'lr': 0.05, "name": "opacity"},
                 {'params': [self._scaling], 'lr': 1e-3, "name": "scaling"},
+                {'params': [self._normal], 'lr': 0.05, "name": "normal"} #同opacity相同学习率
             ]
         self.optimizer = torch.optim.Adam(self.param_groups, lr=0.0, eps=1e-15)
         self.setup_functions()
@@ -95,6 +101,7 @@ class GroundModel:
             self._scaling,
             self._rotation,
             self._opacity,
+            self._normal,
         )
     
     def restore(self, model_args):
@@ -106,8 +113,9 @@ class GroundModel:
         self._features_rest,
         self._feats3D,
         self._scaling,
-        self._rotation, 
-        self._opacity) = model_args
+        self._rotation,
+        self._opacity,
+        self._normal) = model_args
 
     @property
     def get_scaling(self):
@@ -138,6 +146,10 @@ class GroundModel:
     def get_opacity(self):
         return self.opacity_activation(self._opacity)
     
+    @property
+    def get_normal(self):
+        return torch.nn.functional.normalize(self._normal, p=2, dim=-1)
+    
     def get_covariance(self, scaling_modifier = 1):
         return self.covariance_activation(self.get_scaling, scaling_modifier, self._rotation)
 
@@ -159,6 +171,8 @@ class GroundModel:
             l.append('scale_{}'.format(i))
         for i in range(self._rotation.shape[1]):
             l.append('rot_{}'.format(i))
+        for i in range(self._normal.shape[1]):
+            l.append('normal_{}'.format(i))
         return l
 
     def save_ply(self, path):
@@ -172,11 +186,12 @@ class GroundModel:
         opacities = self._opacity.detach().cpu().numpy()
         scale = self._scaling.detach().cpu().numpy()
         rotation = self._rotation.detach().cpu().numpy()
+        normal = self._normal.detach().cpu().numpy()
 
         dtype_full = [(attribute, 'f4') for attribute in self.construct_list_of_attributes()]
 
         elements = np.empty(xyz.shape[0], dtype=dtype_full)
-        attributes = np.concatenate((xyz, normals, f_dc, f_rest, feats3D, opacities, scale, rotation), axis=1)
+        attributes = np.concatenate((xyz, normals, f_dc, f_rest, feats3D, opacities, scale, rotation, normal), axis=1)
         elements[:] = list(map(tuple, attributes))
         el = PlyElement.describe(elements, 'vertex')
         PlyData([el]).write(path)
@@ -243,6 +258,7 @@ class GroundModel:
         self._opacity = optimizable_tensors["opacity"]
         self._scaling = optimizable_tensors["scaling"]
         self._rotation = self._rotation[0, :].repeat((self._xyz.shape[0], 1))
+        self._normal = optimizable_tensors["normal"]
 
         self.xyz_gradient_accum = self.xyz_gradient_accum[valid_points_mask]
 
@@ -272,13 +288,14 @@ class GroundModel:
 
         return optimizable_tensors
 
-    def densification_postfix(self, new_xyz, new_features_dc, new_features_rest, new_feats3D, new_opacities, new_scaling, new_rotation):
+    def densification_postfix(self, new_xyz, new_features_dc, new_features_rest, new_feats3D, new_normal, new_opacities, new_scaling, new_rotation):
         d = {"xyz": new_xyz,
         "f_dc": new_features_dc,
         "f_rest": new_features_rest,
         "feats3D": new_feats3D,
         "opacity": new_opacities,
-        "scaling" : new_scaling}
+        "scaling" : new_scaling,
+        "normal": new_normal}
 
         optimizable_tensors = self.cat_tensors_to_optimizer(d)
         self._xyz = optimizable_tensors["xyz"]
@@ -288,6 +305,7 @@ class GroundModel:
         self._opacity = optimizable_tensors["opacity"]
         self._scaling = optimizable_tensors["scaling"]
         self._rotation = self._rotation[0, :].repeat((self._xyz.shape[0], 1))
+        self._normal = optimizable_tensors["normal"]
 
         self.xyz_gradient_accum = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
         self.denom = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
@@ -312,9 +330,10 @@ class GroundModel:
         new_features_dc = self._features_dc[selected_pts_mask].repeat(N,1,1)
         new_features_rest = self._features_rest[selected_pts_mask].repeat(N,1,1)
         new_feats3D = self._feats3D[selected_pts_mask].repeat(N,1)
+        new_normal = self._normal[selected_pts_mask].repeat(N,1)
         new_opacity = self._opacity[selected_pts_mask].repeat(N,1)
 
-        self.densification_postfix(new_xyz, new_features_dc, new_features_rest, new_feats3D, new_opacity, new_scaling, new_rotation)
+        self.densification_postfix(new_xyz, new_features_dc, new_features_rest, new_feats3D, new_normal, new_opacity, new_scaling, new_rotation)
 
         prune_filter = torch.cat((selected_pts_mask, torch.zeros(N * selected_pts_mask.sum(), device="cuda", dtype=bool)))
         self.prune_points(prune_filter)
@@ -329,11 +348,12 @@ class GroundModel:
         new_features_dc = self._features_dc[selected_pts_mask]
         new_features_rest = self._features_rest[selected_pts_mask]
         new_feats3D = self._feats3D[selected_pts_mask]
+        new_normal = self._normal[selected_pts_mask]
         new_opacities = self._opacity[selected_pts_mask]
         new_scaling = self._scaling[selected_pts_mask]
         new_rotation = self._rotation[selected_pts_mask]
 
-        self.densification_postfix(new_xyz, new_features_dc, new_features_rest, new_feats3D, new_opacities, new_scaling, new_rotation)
+        self.densification_postfix(new_xyz, new_features_dc, new_features_rest, new_feats3D, new_normal, new_opacities, new_scaling, new_rotation)
 
     def densify_and_prune(self, max_grad, min_opacity, extent, max_screen_size):
         grads = self.xyz_gradient_accum / self.denom
@@ -358,3 +378,20 @@ class GroundModel:
     def add_densification_stats_grad(self, tensor_grad, update_filter):
         self.xyz_gradient_accum[update_filter] += torch.norm(tensor_grad[update_filter,:2], dim=-1, keepdim=True)
         self.denom[update_filter] += 1
+
+    def get_smallest_axis(self, return_idx=False):
+        rotation_matrices = self.get_rotation_matrix()
+        smallest_axis_idx = self.get_scaling.min(dim=-1)[1][..., None, None].expand(-1, 3, -1)
+        smallest_axis = rotation_matrices.gather(2, smallest_axis_idx)
+        if return_idx:
+            return smallest_axis.squeeze(dim=2), smallest_axis_idx[..., 0, 0]
+        return smallest_axis.squeeze(dim=2)
+
+    def get_rotation_matrix(self):
+        from pytorch3d.transforms import quaternion_to_matrix
+        return quaternion_to_matrix(self.get_rotation)
+    
+    def init_normal(self, coe):
+        normals = (1-coe) * self.get_smallest_axis().detach().clone() + coe * self._normal
+        optimizable_tensors = self.replace_tensor_to_optimizer(normals, "normal")
+        self._normal = optimizable_tensors["normal"]

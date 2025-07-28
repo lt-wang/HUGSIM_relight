@@ -19,6 +19,10 @@ from scene.dataset_readers import fetchPly
 from omegaconf import OmegaConf
 from functools import partial
 from tqdm import tqdm as std_tqdm
+from utils.loss_utils import get_tv_loss
+from utils.cmap import color_depth_map
+import numpy as np
+import cv2
 tqdm = partial(std_tqdm, dynamic_ncols=True)
 
 # seedEverything()
@@ -83,12 +87,47 @@ def training(cfg):
         if iteration % 500 == 10:
             torchvision.utils.save_image(image, os.path.join(cfg.model_path, "ground", "save_train", f"{iteration}_{viewpoint_cam.image_name}.png"))
 
+            # # 提取数据
+            # render_rgb = render_pkg['render'].detach().cpu()
+            # depth = render_pkg['depth']
+            # color_depth = color_depth_map(depth[0].detach().cpu().permute(2, 0, 0))
+            normal = render_pkg['normal']
+            depth_normal = render_pkg['depth_normal']
+            # gt = viewpoint_cam.original_image[0:3, :, :].detach().cpu()
+            #
+            # # 计算误差图
+            # error_map = torch.mean((render_rgb - gt) ** 2, dim=0)[None, ...]
+            #
+            # # 确保所有图像都是torch.Tensor格式
+            # color_depth_tensor = torch.from_numpy(color_depth).permute(2, 0, 1)
+            # normal_tensor = torch.from_numpy(normal)
+            # depth_normal_tensor = torch.from_numpy(depth_normal)
+            #
+            # # 拼接图像
+            # row1 = torch.cat([gt, render_rgb, error_map], dim=3)  # 横向拼接第一行
+            # row2 = torch.cat([color_depth_tensor, normal_tensor, depth_normal_tensor], dim=3)  # 横向拼接第二行
+            # total_image = torch.cat([row1, row2], dim=2)  # 纵向拼接
+    
+            # torchvision.utils.save_image(total_image, os.path.join(cfg.model_path, "ground", "save_debug",
+            #                                                  f"{iteration}_{viewpoint_cam.image_name}.png"))
+            normal_show = (((normal+1.0)*0.5).permute(1,2,0).clamp(0,1)*255).detach().cpu().numpy().astype(np.uint8)
+            depth_normal_show = (((depth_normal+1.0)*0.5).permute(1,2,0).clamp(0,1)*255).detach().cpu().numpy().astype(np.uint8)
+            cv2.imwrite(os.path.join(os.path.join(cfg.model_path, "ground", "save_debug"), "%05d"%iteration + "_" + viewpoint_cam.image_name + ".jpg"), depth_normal_show)
+            #normal_show = render_pkg['normal'].detach().cpu()
+            #torchvision.utils.save_image((normal_show), os.path.join(cfg.model_path, "ground", "save_debug",
+                                                            #f"{iteration}_{viewpoint_cam.image_name}.png"))
+
         # Loss
         loss = 0
 
         valid_mask = (gt_semantic <= 1)[0]
         image[:, ~valid_mask] *= 0
         gt_image[:, ~valid_mask] *= 0
+
+        rendered_normal = render_pkg["normal"]
+        rendered_normal [:, ~valid_mask] *= 0
+        depth_normal = render_pkg["depth_normal"]
+        depth_normal [:, ~valid_mask] *= 0
 
         if cfg.semantic and gt_semantic is not None:
             semantic_map = render_pkg["feats"]
@@ -113,6 +152,16 @@ def training(cfg):
         rgb_loss = (1.0 - cfg.opt.lambda_dssim) * Ll1 + cfg.opt.lambda_dssim * ssim_loss(image, gt_image)
         loss += rgb_loss
 
+        ## nomral-depth consistency loss
+        normal_loss_weight = 1.0
+        normal_loss = l1_loss(rendered_normal, depth_normal)
+        loss += normal_loss_weight * normal_loss
+
+        normal_tv_weight = 1.0
+        normal_tv_loss = get_tv_loss(gt_image, render_pkg["normal"], pad=1, step=1)
+        loss += normal_tv_loss * normal_tv_weight
+
+        # Backpropagation
         loss.backward()
 
         iter_end.record()
@@ -124,6 +173,8 @@ def training(cfg):
                 if cfg.semantic:
                     postfix["Semantic"] = f"{semantic_loss:.{4}f}"
                 postfix["dist"] = f"{distort_3d_loss:.{4}f}"
+                postfix["normal"] = f"{normal_loss:.{4}f}"
+                postfix["tv"] = f"{normal_tv_loss:.{4}f}"
                 progress_bar.set_postfix(postfix)
                 progress_bar.update(10)
             if iteration == cfg.train.iterations:
@@ -173,6 +224,8 @@ def prepare_output(args):
     os.makedirs(os.path.join(args.model_path, "ground"), exist_ok = True)
     os.makedirs(os.path.join(args.model_path, "ground", "save_test"), exist_ok=True)
     os.makedirs(os.path.join(args.model_path, "ground", "save_train"), exist_ok=True)
+    # debug
+    os.makedirs(os.path.join(args.model_path, "ground", "save_debug"), exist_ok=True)
     OmegaConf.save(args, os.path.join(args.model_path, 'cfg.yaml'))
 
 def validation(iteration, model_path, gaussians, train_cameras, test_cameras, renderFunc, background):

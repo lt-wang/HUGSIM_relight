@@ -5,6 +5,21 @@ from gsplat.rendering import rasterization
 import roma
 from scene.cameras import Camera
 from torch import Tensor
+from utils.graphics_utils import normal_from_depth_image
+#深度图推导法线
+def render_normal(viewpoint_cam:Camera, depth, offset=None, normal=None, scale=1):
+    # depth: (H, W), bg_color: (3), alpha: (H, W)
+    # normal_ref: (3, H, W)
+    intrinsic_matrix, extrinsic_matrix = viewpoint_cam.get_calib_matrix_nerf(scale=scale)
+    st = max(int(scale/2)-1,0)
+    if offset is not None:
+        offset = offset[st::scale,st::scale]
+    normal_ref = normal_from_depth_image(depth[st::scale,st::scale], 
+                                            intrinsic_matrix.to(depth.device), 
+                                            extrinsic_matrix.to(depth.device), offset)
+
+    normal_ref = normal_ref.permute(2,0,1) #[H,W,3]-> [3，H,W]
+    return normal_ref
 
 def euler2matrix(yaw):
     return torch.tensor([
@@ -21,9 +36,9 @@ def cat_bgfg(bg, fg, only_xyz=False):
             bg_feats = [bg.get_full_xyz]
     else:
         if bg.ground_model is None:
-            bg_feats = [bg.get_xyz, bg.get_opacity, bg.get_scaling, bg.get_rotation, bg.get_features, bg.get_3D_features]
+            bg_feats = [bg.get_xyz, bg.get_opacity, bg.get_scaling, bg.get_rotation, bg.get_features, bg.get_3D_features, bg.get_normal]
         else:
-            bg_feats = [bg.get_full_xyz, bg.get_full_opacity, bg.get_full_scaling, bg.get_full_rotation, bg.get_full_features, bg.get_full_3D_features]
+            bg_feats = [bg.get_full_xyz, bg.get_full_opacity, bg.get_full_scaling, bg.get_full_rotation, bg.get_full_features, bg.get_full_3D_features, bg.get_full_normal]
 
     
     if len(fg) == 0:
@@ -69,7 +84,8 @@ def unicycle_b2w(timestamp, model):
 
 
 def render(viewpoint:Camera, prev_viewpoint:Camera, pc:GaussianModel, dynamic_gaussians:dict, 
-            unicycles:dict, bg_color:Tensor, render_optical=False, planning=[]):
+            unicycles:dict, bg_color:Tensor, render_optical=False, planning=[],
+            return_depth_normal=True):
     """
     Render the scene. 
     
@@ -107,13 +123,18 @@ def render(viewpoint:Camera, prev_viewpoint:Camera, pc:GaussianModel, dynamic_ga
         drot = roma.quat_wxyz_to_xyzw(dynamic_gaussians[track_id].get_rotation)
         drot = roma.unitquat_to_rotmat(drot)
         w_drot = roma.quat_xyzw_to_wxyz(roma.rotmat_to_unitquat(B2W[:3, :3] @ drot))
+        
+        # 处理法向量变换
+        w_dnormal = (B2W[:3, :3] @ dynamic_gaussians[track_id].get_normal.T).T
+        
         fg = [w_dxyz, 
             dynamic_gaussians[track_id].get_opacity, 
             dynamic_gaussians[track_id].get_scaling, 
             w_drot,
             # dynamic_gaussians[track_id].get_rotation,
             dynamic_gaussians[track_id].get_features,
-            dynamic_gaussians[track_id].get_3D_features]
+            dynamic_gaussians[track_id].get_3D_features,
+            w_dnormal]
             
         all_fg.append(fg)
 
@@ -126,7 +147,10 @@ def render(viewpoint:Camera, prev_viewpoint:Camera, pc:GaussianModel, dynamic_ga
                 prev_all_fg.append([w_dxyz])
     
     all_fg = concatenate_all(all_fg)
-    xyz, opacities, scales, rotations, shs, feats3D = cat_bgfg(pc, all_fg)
+    xyz, opacities, scales, rotations, shs, feats3D, normals = cat_bgfg(pc, all_fg)
+    
+    # 将全局法向量转换到相机坐标系
+    local_normal = normals @ viewpoint.world_view_transform[:3,:3]
 
     if render_optical and prev_viewpoint is not None:
         prev_all_fg = concatenate_all(prev_all_fg)
@@ -147,9 +171,9 @@ def render(viewpoint:Camera, prev_viewpoint:Camera, pc:GaussianModel, dynamic_ga
         affine_weight = affine_weight + torch.eye(3, device=appearance.device)
     
     if render_optical:
-        render_mode = 'RGB+ED+S+F'
+        render_mode = "RGB+ED+S+F+N"
     else:
-        render_mode = 'RGB+ED+S'
+        render_mode = "RGB+ED+S+N"
         
     renders, render_alphas, info = rasterization(
         means=xyz,
@@ -161,6 +185,7 @@ def render(viewpoint:Camera, prev_viewpoint:Camera, pc:GaussianModel, dynamic_ga
         Ks=viewpoint.K[None, :3, :3],  # [C, 3, 3]
         width=viewpoint.width,
         height=viewpoint.height,
+        normals=local_normal[None, ...],  # [C, N, 3]
         smts=feats3D[None, ...],
         flows= delta_uv[None, ...],
         render_mode=render_mode,
@@ -174,7 +199,14 @@ def render(viewpoint:Camera, prev_viewpoint:Camera, pc:GaussianModel, dynamic_ga
     renders = renders[0]
     rendered_image = renders[..., :3].permute(2,0,1)
     depth = renders[..., 3][None, ...]
-    smt = renders[..., 4:(4+feats3D.shape[-1])].permute(2,0,1)
+    smt = renders[..., 4:24].permute(2,0,1)
+    
+    rendered_normal = renders[..., -3:].permute(2, 0, 1)
+    # 提取光流
+    if render_optical:
+        optical_flow = renders[..., 25:27].permute(2,0,1)
+    else:
+        optical_flow = None
     
     if pc.affine:
         colors = rendered_image.view(3, -1).permute(1, 0) # (H*W, 3)
@@ -182,21 +214,30 @@ def render(viewpoint:Camera, prev_viewpoint:Camera, pc:GaussianModel, dynamic_ga
     else:
         refined_image = rendered_image
 
-    return {"render": refined_image,
+    return_dict =  {"render": refined_image,
             "feats": smt,
             "depth": depth,
-            "opticalflow": renders[..., -2:].permute(2,0,1) if render_optical else None,
+            "normal": rendered_normal,
+            "opticalflow": optical_flow,
             "alphas": render_alphas,
             "viewspace_points": info["means2d"],
             "info": info,
             }
+    if return_depth_normal:
+        depth_normal = render_normal(viewpoint, depth.squeeze()) * (render_alphas[0].permute(2, 0, 1)).detach()
+        return_dict.update({"depth_normal": depth_normal})
+    return return_dict
 
-
-def render_ground(viewpoint:Camera, pc:GroundModel, bg_color:Tensor):
+def render_ground(viewpoint:Camera, pc:GroundModel, bg_color:Tensor, return_depth_normal=True):
     xyz, opacities, scales = pc.get_xyz, pc.get_opacity, pc.get_scaling
     rotations, shs, feats3D = pc.get_rotation, pc.get_features, pc.get_3D_features
 
+    ##新增normal渲染
+    global_normal = pc.get_normal 
+    local_normal = global_normal @ viewpoint.world_view_transform[:3,:3]
+
     K = viewpoint.K[None, :3, :3]
+    delta_uv = torch.zeros_like(xyz)
     renders, render_alphas, info = rasterization(
         means=xyz,
         quats=rotations,
@@ -207,8 +248,10 @@ def render_ground(viewpoint:Camera, pc:GroundModel, bg_color:Tensor):
         Ks=K,  # [C, 3, 3]
         width=viewpoint.width,
         height=viewpoint.height,
+        normals=local_normal[None, ...],  # [C, N, 3]
         smts=feats3D[None, ...],
-        render_mode='RGB+ED+S',
+        flows=delta_uv[None, ...],
+        render_mode='RGB+ED+S+F+N',
         sh_degree=pc.active_sh_degree,
         near_plane=0.01,
         far_plane=500,
@@ -220,12 +263,29 @@ def render_ground(viewpoint:Camera, pc:GroundModel, bg_color:Tensor):
     rendered_image = renders[..., :3].permute(2,0,1)
     depth = renders[..., 3][None, ...]
     smt = renders[..., 4:(4+feats3D.shape[-1])].permute(2,0,1)
+    rendered_normal = renders[..., -3:].permute(2, 0, 1)
 
-    return {"render": rendered_image,
-            "feats": smt,
-            "depth": depth,
+
+
+    return_dict = {"render": rendered_image, #[3,H,W]
+            "feats": smt,  #[20,H,W]
+            "depth": depth, #[1,H,W]
+            "normal": rendered_normal, #[3,H,W]
             "opticalflow": None,
-            "alphas": render_alphas,
+            "alphas": render_alphas,  #[1,H,W,1] 还有一个相机C参数
             "viewspace_points": info["means2d"],
             "info": info,
             }
+    if return_depth_normal:
+        #print("normal shape:", render_normal(viewpoint, depth.squeeze()).shape)
+        #print("alpha shape:", (render_alphas[0].shape))
+
+        # 调整 alpha 的形状，使其与 normal 形状兼容
+        #tmp_alphas = render_alphas[0].permute(2, 0, 1)  # 转换为 [1, 450, 800]
+        #print("alpha shape:", tmp_alphas.shape)
+
+        # 进行逐元素相乘
+        depth_normal = render_normal(viewpoint, depth.squeeze()) * (render_alphas[0].permute(2, 0, 1)).detach()
+        return_dict.update({"depth_normal": depth_normal})
+
+    return return_dict
